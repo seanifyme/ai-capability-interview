@@ -46,7 +46,8 @@ Please return a JSON array of recommendations for where AI agents could add the 
 
     let recommendations: string[] = [];
     try {
-      recommendations = JSON.parse(questions);
+      const cleaned = questions.replace(/```json|```/g, "").trim();
+      recommendations = JSON.parse(cleaned);
     } catch (err) {
       console.error("❌ Failed to parse Gemini response:", err);
       return Response.json({ success: false, error: "Invalid AI response format" }, { status: 500 });
