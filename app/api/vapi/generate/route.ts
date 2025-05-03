@@ -68,6 +68,12 @@ Please return a JSON array of recommendations for where AI agents could add the 
       finalized: true,
       coverImage: getRandomInterviewCover(),
       createdAt: new Date().toISOString(),
+
+      // 🔧 Add these to match what's expected by the InterviewCard component
+      techstack: ["AI", "Automation"], // or fetch from user if you want
+      questions: ["What task consumes most of your day?", "What decisions could be automated?"],
+      type: "AI Readiness", // dummy label
+      level: "N/A",         // not applicable but still expected
     };
 
 // Remove undefined/null values
