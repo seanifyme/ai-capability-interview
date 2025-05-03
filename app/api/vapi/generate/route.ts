@@ -52,7 +52,7 @@ Please return a JSON array of recommendations for where AI agents could add the 
       return Response.json({ success: false, error: "Invalid AI response format" }, { status: 500 });
     }
 
-    const interview = {
+    const interviewRaw = {
       companyname,
       department,
       role,
@@ -69,6 +69,12 @@ Please return a JSON array of recommendations for where AI agents could add the 
       coverImage: getRandomInterviewCover(),
       createdAt: new Date().toISOString(),
     };
+
+// Remove undefined/null values
+    const interview = Object.fromEntries(
+        Object.entries(interviewRaw).filter(([_, v]) => v !== undefined && v !== null)
+    );
+
 
     await db.collection("interviews").add(interview);
 
