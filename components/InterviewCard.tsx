@@ -61,7 +61,9 @@ const InterviewCard = async ({
           />
 
           {/* Interview Role */}
-          <h3 className="mt-5 capitalize">{role} Interview</h3>
+          <h3 className="mt-5 capitalize">
+            {type === "AI Readiness" ? "Your AI Readiness Audit Report" : `${role} Interview`}
+          </h3>
 
           {/* Date & Score */}
           <div className="flex flex-row gap-5 mt-3">
@@ -92,16 +94,11 @@ const InterviewCard = async ({
           <DisplayTechIcons techStack={techstack} />
 
           <Button className="btn-primary">
-            <Link
-              href={
-                feedback
-                  ? `/interview/${interviewId}/feedback`
-                  : `/interview/${interviewId}`
-              }
-            >
-              {feedback ? "Check Feedback" : "View Interview"}
+            <Link href={`/interview/${interviewId}/feedback`}>
+              View Report
             </Link>
           </Button>
+
         </div>
       </div>
     </div>

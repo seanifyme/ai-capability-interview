@@ -5,21 +5,17 @@ import { Button } from "@/components/ui/button";
 import InterviewCard from "@/components/InterviewCard";
 
 import { getCurrentUser } from "@/lib/actions/auth.action";
-import {
-  getInterviewsByUserId,
-  getLatestInterviews,
-} from "@/lib/actions/general.action";
+import { getInterviewsByUserId } from "@/lib/actions/general.action";
+
 
 async function Home() {
   const user = await getCurrentUser();
 
-  const [userInterviews, allInterview] = await Promise.all([
-    getInterviewsByUserId(user?.id!),
-    getLatestInterviews({ userId: user?.id! }),
-  ]);
+  if (!user?.id) return null;
 
-  const hasPastInterviews = userInterviews?.length! > 0;
-  const hasUpcomingInterviews = allInterview?.length! > 0;
+  const userInterviews = (await getInterviewsByUserId(user.id)) || [];
+  const hasPastInterviews = userInterviews.length > 0;
+
 
   return (
     <>
@@ -45,7 +41,7 @@ async function Home() {
       </section>
 
       <section className="flex flex-col gap-6 mt-8">
-        <h2>Your Interviews</h2>
+        <h2>Your AI Readiness Audit</h2>
 
         <div className="interviews-section">
           {hasPastInterviews ? (
@@ -66,27 +62,7 @@ async function Home() {
         </div>
       </section>
 
-      <section className="flex flex-col gap-6 mt-8">
-        <h2>Take Interviews</h2>
 
-        <div className="interviews-section">
-          {hasUpcomingInterviews ? (
-            allInterview?.map((interview) => (
-              <InterviewCard
-                key={interview.id}
-                userId={user?.id}
-                interviewId={interview.id}
-                role={interview.role}
-                type={interview.type}
-                techstack={interview.techstack}
-                createdAt={interview.createdAt}
-              />
-            ))
-          ) : (
-            <p>There are no interviews available</p>
-          )}
-        </div>
-      </section>
     </>
   );
 }
