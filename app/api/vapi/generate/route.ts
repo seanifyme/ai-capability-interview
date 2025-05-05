@@ -11,13 +11,13 @@ export async function POST(request: Request) {
 
         const {
             companyname,
-            department,
             role,
+            department,
             teamsize,
             responsibilities,
+            aifamiliarity,
             bottlenecks,
             impactareas,
-            aifamiliarity,
             prioritygoal,
             urgency,
             userid
@@ -30,13 +30,13 @@ export async function POST(request: Request) {
 You are an AI transformation consultant. Based on the following user answers, generate an AI Readiness Audit Report.
 
 Company: ${companyname}
-Department: ${department}
 Role: ${role}
+Department: ${department}
 Team Size: ${teamsize}
 Responsibilities: ${responsibilities}
+AI Familiarity (1–10): ${aifamiliarity}
 Bottlenecks: ${bottlenecks}
 Impact Areas: ${impactareas}
-AI Familiarity (1–10): ${aifamiliarity}
 Priority Goal: ${prioritygoal}
 Urgency: ${urgency}
 
@@ -67,13 +67,13 @@ Please return a JSON object in this format:
         // Prepare full interview object
         const interviewRaw = {
             companyname,
-            department,
             role,
+            department,
             teamsize,
             responsibilities,
+            aifamiliarity,
             bottlenecks,
             impactareas,
-            aifamiliarity,
             prioritygoal,
             urgency,
             recommendations: auditData.recommendations,
