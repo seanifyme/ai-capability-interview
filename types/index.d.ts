@@ -26,7 +26,15 @@ interface Interview {
   userId: string;
   type: string;
   finalized: boolean;
+
+  // 🔥 AI Readiness Audit Fields
+  readinessScore?: number;
+  benchmarkSummary?: string;
+  recommendations?: string[];
+  strengths?: string[];
+  weaknesses?: string[];
 }
+
 
 interface CreateFeedbackParams {
   interviewId: string;
