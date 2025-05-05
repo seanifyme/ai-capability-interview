@@ -16,7 +16,10 @@ type FeedbackWithExtras = {
     createdAt?: string;
     benchmark?: string;
     recommendations?: string[];
+    strengths?: string[] | undefined;
+    weaknesses?: string[] | undefined;
 };
+
 
 const Feedback = async ({ params }: RouteParams) => {
     const { id } = await params;
@@ -77,6 +80,30 @@ const Feedback = async ({ params }: RouteParams) => {
                 </p>
             </div>
 
+            {/* Strengths */}
+            {Array.isArray(feedback?.strengths) && feedback.strengths.length > 0 && (
+                <div className="mb-6">
+                    <h2 className="text-xl font-semibold">Your Strengths</h2>
+                    <ul className="list-disc ml-5 mt-3 space-y-2 text-green-700 dark:text-green-400">
+                        {feedback.strengths.map((item: string, idx: number) => (
+                            <li key={idx}>{item}</li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
+            {/* Weaknesses */}
+            {Array.isArray(feedback?.weaknesses) && feedback.weaknesses.length > 0 && (
+                <div className="mb-6">
+                    <h2 className="text-xl font-semibold">Suggested Improvements</h2>
+                    <ul className="list-disc ml-5 mt-3 space-y-2 text-red-700 dark:text-red-400">
+                        {feedback.weaknesses.map((item: string, idx: number) => (
+                            <li key={idx}>{item}</li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
             {/* Recommendations */}
             <div>
                 <h2 className="text-xl font-semibold">Recommended AI Use Cases</h2>
@@ -90,6 +117,7 @@ const Feedback = async ({ params }: RouteParams) => {
                     )}
                 </ul>
             </div>
+
 
             {/* Navigation */}
             <div className="buttons mt-10">
