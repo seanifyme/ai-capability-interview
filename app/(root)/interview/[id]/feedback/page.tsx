@@ -4,116 +4,105 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 
 import {
-  getFeedbackByInterviewId,
-  getInterviewById,
+    getFeedbackByInterviewId,
+    getInterviewById,
 } from "@/lib/actions/general.action";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/actions/auth.action";
 
+// 👇 Temporary type override to avoid TS errors
+type FeedbackWithExtras = {
+    totalScore?: number;
+    createdAt?: string;
+    benchmark?: string;
+    recommendations?: string[];
+};
+
 const Feedback = async ({ params }: RouteParams) => {
-  const { id } = await params;
-  const user = await getCurrentUser();
+    const { id } = await params;
+    const user = await getCurrentUser();
 
-  const interview = await getInterviewById(id);
-  if (!interview) redirect("/");
+    const interview = await getInterviewById(id);
+    if (!interview) redirect("/");
 
-  const feedback = await getFeedbackByInterviewId({
-    interviewId: id,
-    userId: user?.id!,
-  });
+    const feedbackRaw = await getFeedbackByInterviewId({
+        interviewId: id,
+        userId: user?.id || "",
+    });
 
-  return (
-    <section className="section-feedback">
-      <div className="flex flex-row justify-center">
-        <h1 className="text-4xl font-semibold">
-          Feedback on the Interview -{" "}
-          <span className="capitalize">{interview.role}</span> Interview
-        </h1>
-      </div>
+    // 👇 Cast to extended type
+    const feedback = feedbackRaw as FeedbackWithExtras;
 
-      <div className="flex flex-row justify-center ">
-        <div className="flex flex-row gap-5">
-          {/* Overall Impression */}
-          <div className="flex flex-row gap-2 items-center">
-            <Image src="/star.svg" width={22} height={22} alt="star" />
-            <p>
-              Overall Impression:{" "}
-              <span className="text-primary-200 font-bold">
-                {feedback?.totalScore}
+    return (
+        <section className="section-feedback">
+            {/* Title */}
+            <div className="flex flex-row justify-center">
+                <h1 className="text-4xl font-semibold">
+                    Your AI Readiness Audit Report
+                </h1>
+            </div>
+
+            {/* Score + Date */}
+            <div className="flex flex-row justify-center mt-4">
+                <div className="flex flex-row gap-5">
+                    <div className="flex flex-row gap-2 items-center">
+                        <Image src="/star.svg" width={22} height={22} alt="star" />
+                        <p>
+                            AI Readiness Score:{" "}
+                            <span className="text-primary-200 font-bold">
+                {feedback?.totalScore ?? "---"}
               </span>
-              /100
-            </p>
-          </div>
+                            /100
+                        </p>
+                    </div>
 
-          {/* Date */}
-          <div className="flex flex-row gap-2">
-            <Image src="/calendar.svg" width={22} height={22} alt="calendar" />
-            <p>
-              {feedback?.createdAt
-                ? dayjs(feedback.createdAt).format("MMM D, YYYY h:mm A")
-                : "N/A"}
-            </p>
-          </div>
-        </div>
-      </div>
+                    <div className="flex flex-row gap-2">
+                        <Image src="/calendar.svg" width={22} height={22} alt="calendar" />
+                        <p>
+                            {feedback?.createdAt
+                                ? dayjs(feedback.createdAt).format("MMM D, YYYY h:mm A")
+                                : "N/A"}
+                        </p>
+                    </div>
+                </div>
+            </div>
 
-      <hr />
+            <hr className="my-6" />
 
-      <p>{feedback?.finalAssessment}</p>
+            {/* Benchmark Summary */}
+            <div className="mb-6">
+                <h2 className="text-xl font-semibold">Benchmark Summary</h2>
+                <p className="mt-2 text-dark200_light800">
+                    {feedback?.benchmark || "Benchmark insights not available."}
+                </p>
+            </div>
 
-      {/* Interview Breakdown */}
-      <div className="flex flex-col gap-4">
-        <h2>Breakdown of the Interview:</h2>
-        {feedback?.categoryScores?.map((category, index) => (
-          <div key={index}>
-            <p className="font-bold">
-              {index + 1}. {category.name} ({category.score}/100)
-            </p>
-            <p>{category.comment}</p>
-          </div>
-        ))}
-      </div>
+            {/* Recommendations */}
+            <div>
+                <h2 className="text-xl font-semibold">Recommended AI Use Cases</h2>
+                <ul className="list-disc ml-5 mt-3 space-y-2 text-dark200_light800">
+                    {feedback?.recommendations?.length ? (
+                        feedback.recommendations.map((rec: string, index: number) => (
+                            <li key={index}>{rec}</li>
+                        ))
+                    ) : (
+                        <li>No recommendations found for this user.</li>
+                    )}
+                </ul>
+            </div>
 
-      <div className="flex flex-col gap-3">
-        <h3>Strengths</h3>
-        <ul>
-          {feedback?.strengths?.map((strength, index) => (
-            <li key={index}>{strength}</li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="flex flex-col gap-3">
-        <h3>Areas for Improvement</h3>
-        <ul>
-          {feedback?.areasForImprovement?.map((area, index) => (
-            <li key={index}>{area}</li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="buttons">
-        <Button className="btn-secondary flex-1">
-          <Link href="/" className="flex w-full justify-center">
-            <p className="text-sm font-semibold text-primary-200 text-center">
-              Back to dashboard
-            </p>
-          </Link>
-        </Button>
-
-        <Button className="btn-primary flex-1">
-          <Link
-            href={`/interview/${id}`}
-            className="flex w-full justify-center"
-          >
-            <p className="text-sm font-semibold text-black text-center">
-              Retake Interview
-            </p>
-          </Link>
-        </Button>
-      </div>
-    </section>
-  );
+            {/* Navigation */}
+            <div className="buttons mt-10">
+                <Button className="btn-secondary flex-1">
+                    <Link href="/" className="flex w-full justify-center">
+                        <p className="text-sm font-semibold text-primary-200 text-center">
+                            Back to dashboard
+                        </p>
+                    </Link>
+                </Button>
+            </div>
+        </section>
+    );
 };
 
 export default Feedback;

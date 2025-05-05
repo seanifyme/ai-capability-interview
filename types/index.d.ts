@@ -1,15 +1,18 @@
 interface Feedback {
-  id: string;
+  id?: string;
   interviewId: string;
-  totalScore: number;
-  categoryScores: Array<{
+  userId?: string; // optional since not always needed
+  totalScore?: number; // some interviews may not have it
+  benchmark?: string;
+  recommendations?: string[];
+  categoryScores?: Array<{
     name: string;
     score: number;
     comment: string;
   }>;
-  strengths: string[];
-  areasForImprovement: string[];
-  finalAssessment: string;
+  strengths?: string[];
+  areasForImprovement?: string[];
+  finalAssessment?: string;
   createdAt: string;
 }
 
