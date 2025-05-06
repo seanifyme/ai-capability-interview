@@ -141,8 +141,9 @@
 
   body {
     background: linear-gradient(to bottom, #00204E, #004BAB);
-    @apply text-foreground;
+    color: oklch(0.985 0 0); /* optional: your --foreground value */
   }
+
 
   p {
     @apply text-light-100;
