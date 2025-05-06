@@ -138,26 +138,33 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
-    background: var(--background);
+    background: linear-gradient(to bottom, #00204E, #004BAB);
     @apply text-foreground;
   }
+
   p {
     @apply text-light-100;
   }
+
   h2 {
     @apply text-3xl font-semibold;
   }
+
   h3 {
     @apply text-2xl font-semibold;
   }
+
   ul {
     @apply list-disc list-inside;
   }
+
   li {
     @apply text-light-100;
   }
 }
+
 
 @layer components {
   .btn-call {
