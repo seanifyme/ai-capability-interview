@@ -10,31 +10,33 @@ import {
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/actions/auth.action";
 
-// 👇 Temporary type override to avoid TS errors
+// 👇 Typed separately now
 type FeedbackWithExtras = {
     totalScore?: number;
     createdAt?: string;
     benchmark?: string;
     recommendations?: string[];
-    strengths?: string[] | undefined;
-    weaknesses?: string[] | undefined;
 };
 
+type InterviewWithExtras = {
+    strengths?: string[];
+    weaknesses?: string[];
+};
 
 const Feedback = async ({ params }: RouteParams) => {
     const { id } = await params;
     const user = await getCurrentUser();
 
-    const interview = await getInterviewById(id);
-    if (!interview) redirect("/");
+    const interviewRaw = await getInterviewById(id);
+    if (!interviewRaw) redirect("/");
 
     const feedbackRaw = await getFeedbackByInterviewId({
         interviewId: id,
         userId: user?.id || "",
     });
 
-    // 👇 Cast to extended type
     const feedback = feedbackRaw as FeedbackWithExtras;
+    const interview = interviewRaw as InterviewWithExtras;
 
     return (
         <section className="section-feedback">
@@ -53,8 +55,8 @@ const Feedback = async ({ params }: RouteParams) => {
                         <p>
                             AI Readiness Score:{" "}
                             <span className="text-primary-200 font-bold">
-                {feedback?.totalScore ?? "---"}
-              </span>
+                                {feedback?.totalScore ?? "---"}
+                            </span>
                             /100
                         </p>
                     </div>
@@ -81,11 +83,11 @@ const Feedback = async ({ params }: RouteParams) => {
             </div>
 
             {/* Strengths */}
-            {Array.isArray(feedback?.strengths) && feedback.strengths.length > 0 && (
+            {Array.isArray(interview?.strengths) && interview.strengths.length > 0 && (
                 <div className="mb-6">
                     <h2 className="text-xl font-semibold">Your Strengths</h2>
                     <ul className="list-disc ml-5 mt-3 space-y-2 text-green-700 dark:text-green-400">
-                        {feedback.strengths.map((item: string, idx: number) => (
+                        {interview.strengths.map((item: string, idx: number) => (
                             <li key={idx}>{item}</li>
                         ))}
                     </ul>
@@ -93,11 +95,11 @@ const Feedback = async ({ params }: RouteParams) => {
             )}
 
             {/* Weaknesses */}
-            {Array.isArray(feedback?.weaknesses) && feedback.weaknesses.length > 0 && (
+            {Array.isArray(interview?.weaknesses) && interview.weaknesses.length > 0 && (
                 <div className="mb-6">
                     <h2 className="text-xl font-semibold">Suggested Improvements</h2>
                     <ul className="list-disc ml-5 mt-3 space-y-2 text-red-700 dark:text-red-400">
-                        {feedback.weaknesses.map((item: string, idx: number) => (
+                        {interview.weaknesses.map((item: string, idx: number) => (
                             <li key={idx}>{item}</li>
                         ))}
                     </ul>
@@ -117,7 +119,6 @@ const Feedback = async ({ params }: RouteParams) => {
                     )}
                 </ul>
             </div>
-
 
             {/* Navigation */}
             <div className="buttons mt-10">
