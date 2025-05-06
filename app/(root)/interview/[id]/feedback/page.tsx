@@ -97,7 +97,7 @@ const Feedback = async ({ params }: RouteParams) => {
             {/* Weaknesses */}
             {Array.isArray(interview?.weaknesses) && interview.weaknesses.length > 0 && (
                 <div className="mb-6">
-                    <h2 className="text-xl font-semibold">Suggested Improvements</h2>
+                    <h2 className="text-xl font-semibold">Your Weaknesses</h2>
                     <ul className="list-disc ml-5 mt-3 space-y-2 text-red-700 dark:text-red-400">
                         {interview.weaknesses.map((item: string, idx: number) => (
                             <li key={idx}>{item}</li>
@@ -112,7 +112,7 @@ const Feedback = async ({ params }: RouteParams) => {
                 <ul className="list-disc ml-5 mt-3 space-y-2 text-dark200_light800">
                     {feedback?.recommendations?.length ? (
                         feedback.recommendations.map((rec: string, index: number) => (
-                            <li key={index}>{rec}</li>
+                            <li key={index}>{rec.replace(/\*\*/g, "")}</li>
                         ))
                     ) : (
                         <li>No recommendations found for this user.</li>
