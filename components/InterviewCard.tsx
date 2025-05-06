@@ -6,13 +6,7 @@ import { Button } from "./ui/button";
 import DisplayTechIcons from "./DisplayTechIcons";
 
 import { cn, getRandomInterviewCover } from "@/lib/utils";
-import { getFeedbackByInterviewId } from "@/lib/actions/general.action";
-
-// 👇 Override Feedback type to include readinessScore
-type FeedbackWithReadiness = {
-  readinessScore?: number;
-  createdAt?: string;
-};
+import { getInterviewById } from "@/lib/actions/general.action"; // ✅ pulling interview data now
 
 const InterviewCard = async ({
                                interviewId,
@@ -22,15 +16,10 @@ const InterviewCard = async ({
                                techstack,
                                createdAt,
                              }: InterviewCardProps) => {
-  const rawFeedback =
+  const interview =
       userId && interviewId
-          ? await getFeedbackByInterviewId({
-            interviewId,
-            userId,
-          })
+          ? await getInterviewById(interviewId)
           : null;
-
-  const feedback = rawFeedback as FeedbackWithReadiness;
 
   const normalizedType = /mix/gi.test(type) ? "Mixed" : type;
 
@@ -39,10 +28,11 @@ const InterviewCard = async ({
         Behavioral: "bg-light-400",
         Mixed: "bg-light-600",
         Technical: "bg-light-800",
+        "AI Readiness": "bg-light-900",
       }[normalizedType] || "bg-light-600";
 
   const formattedDate = dayjs(
-      feedback?.createdAt || createdAt || Date.now()
+      interview?.createdAt || createdAt || Date.now()
   ).format("MMM D, YYYY");
 
   return (
@@ -56,7 +46,7 @@ const InterviewCard = async ({
                     badgeColor
                 )}
             >
-              <p className="badge-text ">{normalizedType}</p>
+              <p className="badge-text">{normalizedType}</p>
             </div>
 
             {/* Cover Image */}
@@ -70,7 +60,9 @@ const InterviewCard = async ({
 
             {/* Interview Role */}
             <h3 className="mt-5 capitalize">
-              {type === "AI Readiness" ? "Your AI Readiness Audit Report" : `${role} Interview`}
+              {type === "AI Readiness"
+                  ? "AI Readiness Audit Report"
+                  : `${role} Interview`}
             </h3>
 
             {/* Date & Score */}
@@ -87,13 +79,13 @@ const InterviewCard = async ({
 
               <div className="flex flex-row gap-2 items-center">
                 <Image src="/star.svg" width={22} height={22} alt="star" />
-                <p>{feedback?.readinessScore ?? "---"}/100</p>
+                <p>{interview?.readinessScore ?? "---"}/100</p>
               </div>
             </div>
 
-            {/* Placeholder Text */}
+            {/* Summary Line */}
             <p className="line-clamp-2 mt-5">
-              Your AI Readiness Audit is complete. View your report to explore tailored AI suggestions.
+              View your report to explore tailored AI suggestions.
             </p>
           </div>
 
