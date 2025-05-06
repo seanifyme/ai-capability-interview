@@ -44,10 +44,11 @@ const InterviewCard = async ({
                     <Image
                         src="/logo.png"
                         alt="SingularShift Logo"
-                        width={110}
-                        height={110}
-                        className="rounded-full object-fit size-[110px]"
+                        width={80} // adjust as needed
+                        height={80} // adjust as needed
+                        className="w-auto h-auto max-w-[100px] max-h-[100px]"
                     />
+
 
                     {/* Interview Role */}
                     <h3 className="mt-5 capitalize">
