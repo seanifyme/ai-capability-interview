@@ -44,9 +44,9 @@ const InterviewCard = async ({
                     <Image
                         src="/logo.png"
                         alt="SingularShift Logo"
-                        width={80}
-                        height={80}
-                        className="rounded-full object-fit size-[80px]"
+                        width={110}
+                        height={110}
+                        className="rounded-full object-fit size-[110px]"
                     />
 
                     {/* Interview Role */}
