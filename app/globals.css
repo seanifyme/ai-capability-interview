@@ -29,7 +29,7 @@
 
 :root {
   --radius: 0.625rem;
-  --background: linear-gradient(to bottom, #00204E, #004BAB);
+  --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -138,34 +138,25 @@
   * {
     @apply border-border outline-ring/50;
   }
-
   body {
-    background: linear-gradient(to bottom, #00204E, #004BAB);
-    color: oklch(0.985 0 0); /* optional: your --foreground value */
+    @apply bg-background text-foreground;
   }
-
-
   p {
     @apply text-light-100;
   }
-
   h2 {
     @apply text-3xl font-semibold;
   }
-
   h3 {
     @apply text-2xl font-semibold;
   }
-
   ul {
     @apply list-disc list-inside;
   }
-
   li {
     @apply text-light-100;
   }
 }
-
 
 @layer components {
   .btn-call {
@@ -304,7 +295,7 @@
 }
 
 @utility dark-gradient {
-  @apply bg-gradient-to-b from-[#1A1C20] to-[#08090D];
+  @apply bg-gradient-to-b from-[#00204E] to-[#004BAB];
 }
 
 @utility border-gradient {
