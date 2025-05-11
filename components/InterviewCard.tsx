@@ -3,7 +3,6 @@ import Link from "next/link";
 import Image from "next/image";
 
 import { Button } from "./ui/button";
-import DisplayTechIcons from "./DisplayTechIcons";
 import { getInterviewById } from "@/lib/actions/general.action";
 
 const InterviewCard = async ({
@@ -11,7 +10,6 @@ const InterviewCard = async ({
                                  userId,
                                  role,
                                  type,
-                                 techstack,
                                  createdAt,
                              }: InterviewCardProps) => {
     const interview =
@@ -77,8 +75,6 @@ const InterviewCard = async ({
                 </div>
 
                 <div className="flex flex-row justify-between">
-                    <DisplayTechIcons techStack={techstack} />
-
                     <Button className="btn-primary">
                         <Link href={`/interview/${interviewId}/feedback`}>
                             View Report
