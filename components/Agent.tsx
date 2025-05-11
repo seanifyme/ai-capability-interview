@@ -110,9 +110,9 @@ const Agent = ({
               <Image
                   src="/logo.png"
                   alt="AI Interviewer"
-                  width={95}
-                  height={84}
-                  className="object-cover"
+                  width={120}
+                  height={120}
+                  className="rounded-full object-cover"
               />
               {isSpeaking && <span className="animate-speak" />}
             </div>
