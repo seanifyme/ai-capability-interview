@@ -21,7 +21,9 @@ type FeedbackWithExtras = {
 type InterviewWithExtras = {
     strengths?: string[];
     weaknesses?: string[];
+    roleCategory?: string;
 };
+
 
 const Feedback = async ({ params }: RouteParams) => {
     const { id } = await params;
@@ -47,21 +49,23 @@ const Feedback = async ({ params }: RouteParams) => {
                 </h1>
             </div>
 
-            {/* Score + Date */}
+            {/* Score + Date + Role Category */}
             <div className="flex flex-row justify-center mt-4">
                 <div className="flex flex-row gap-5">
+                    {/* Score */}
                     <div className="flex flex-row gap-2 items-center">
                         <Image src="/star.svg" width={22} height={22} alt="star" />
                         <p>
                             AI Readiness Score:{" "}
                             <span className="text-primary-200 font-bold">
-                                {feedback?.totalScore ?? "---"}
-                            </span>
+          {feedback?.totalScore ?? "---"}
+        </span>
                             /100
                         </p>
                     </div>
 
-                    <div className="flex flex-row gap-2">
+                    {/* Date */}
+                    <div className="flex flex-row gap-2 items-center">
                         <Image src="/calendar.svg" width={22} height={22} alt="calendar" />
                         <p>
                             {feedback?.createdAt
@@ -69,6 +73,19 @@ const Feedback = async ({ params }: RouteParams) => {
                                 : "N/A"}
                         </p>
                     </div>
+
+                    {/* Role Category */}
+                    {interview?.roleCategory && (
+                        <div className="flex flex-row gap-2 items-center">
+                            <Image src="/user.svg" width={22} height={22} alt="role" />
+                            <p>
+                                Role Category:{" "}
+                                <span className="text-primary-200 font-bold">
+            {interview.roleCategory}
+          </span>
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
 

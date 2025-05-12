@@ -1,6 +1,5 @@
 import { generateText } from "ai";
 import { google } from "@ai-sdk/google";
-
 import { db } from "@/firebase/admin";
 import { getRandomInterviewCover } from "@/lib/utils";
 
@@ -20,10 +19,34 @@ export async function POST(request: Request) {
             impactareas,
             prioritygoal,
             urgency,
-            userid
+            userid,
         } = body;
 
-        // 👇 Gemini prompt to generate realistic, tailored AI Readiness Audit
+        // 🔍 1. Classify role using Gemini (enterprise-grade categories)
+        const { text: roleCategoryRaw } = await generateText({
+            model: google("gemini-2.0-flash-001"),
+            prompt: `
+You are a role classification AI.
+
+Based on the job title below, assign the user to one of the following categories:
+
+- Software Engineering
+- Product Management
+- Product Design / UX
+- Marketing / Growth
+- Customer Support / Ops
+- Leadership / Strategy
+- Other / Admin
+
+Job Title: ${role}
+
+Return the category only.
+    `.trim(),
+        });
+
+        const roleCategory = roleCategoryRaw.trim().replace(/["']/g, "");
+
+        // 📊 2. Generate AI Readiness Report
         const { text: reportOutput } = await generateText({
             model: google("gemini-2.0-flash-001"),
             prompt: `
@@ -49,17 +72,12 @@ Please return a JSON object with the following format:
   "weaknesses": [ "Weakness 1", "Weakness 2", ... ]
 }
 
-Be highly realistic. For example, if the team size is small, AI familiarity is low, and current usage is minimal, the score should reflect that. Only assign a score above 80 if the company shows advanced familiarity and usage.
-
+Be highly realistic. Only assign a score above 80 if the company shows advanced familiarity and usage.
 Benchmark summary should compare this user to others in similar roles in their region.
-
 Recommendations should be highly relevant to their workflows and bottlenecks.
-`
+      `.trim(),
         });
 
-        console.log("✅ Gemini response:", reportOutput);
-
-        // ✅ Extract structured fields from Gemini's JSON response
         const cleaned = reportOutput.replace(/```json|```/g, "").trim();
 
         const {
@@ -67,13 +85,14 @@ Recommendations should be highly relevant to their workflows and bottlenecks.
             benchmarkSummary,
             recommendations,
             strengths,
-            weaknesses
+            weaknesses,
         } = JSON.parse(cleaned);
 
-        // ✅ Prepare Firestore-ready interview object
-        const interviewRaw = {
+        // ✅ 3. Final interview object to store
+        const interview = {
             companyname,
             role,
+            roleCategory,
             department,
             teamsize,
             responsibilities,
@@ -91,18 +110,11 @@ Recommendations should be highly relevant to their workflows and bottlenecks.
             finalized: true,
             coverImage: getRandomInterviewCover(),
             createdAt: new Date().toISOString(),
-
-            // Required by InterviewCard component
             techstack: ["AI", "Automation"],
             questions: ["What task consumes most of your day?", "What decisions could be automated?"],
             type: "AI Readiness",
-            level: "N/A"
+            level: "N/A",
         };
-
-        // ✅ Remove any undefined/null entries
-        const interview = Object.fromEntries(
-            Object.entries(interviewRaw).filter(([, v]) => v !== undefined && v !== null)
-        );
 
         await db.collection("interviews").add(interview);
         console.log("✅ Interview saved to Firestore");
@@ -112,8 +124,4 @@ Recommendations should be highly relevant to their workflows and bottlenecks.
         console.error("🔥 Error in /api/vapi/generate:", error);
         return Response.json({ success: false, error: error }, { status: 500 });
     }
-}
-
-export async function GET() {
-    return Response.json({ success: true, data: "Thank you!" }, { status: 200 });
 }
