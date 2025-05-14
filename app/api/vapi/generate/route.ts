@@ -9,20 +9,34 @@ export async function POST(request: Request) {
         console.log("🔥 Incoming Vapi request body:", body);
 
         const {
+            userid,
             companyname,
+            location,
             role,
             department,
             teamsize,
+            crossfunctioninteraction,
             responsibilities,
-            aifamiliarity,
+            trackingtools,
+            manualhours,
+            aitools,
+            aitoolimpact,
+            manualpainpoints,
             bottlenecks,
-            impactareas,
+            automationwish,
+            redundancyexamples,
+            decisionfriction,
+            customerpainpoints,
             prioritygoal,
+            trackedmetrics,
+            timesavingimpact,
             urgency,
-            userid,
+            aiconcerns,
+            aifamiliarity,
+            competitorcomparison
         } = body;
 
-        // 🔍 1. Classify role using Gemini (enterprise-grade categories)
+        // 🔍 Classify role for dashboard filtering
         const { text: roleCategoryRaw } = await generateText({
             model: google("gemini-2.0-flash-001"),
             prompt: `
@@ -41,40 +55,71 @@ Based on the job title below, assign the user to one of the following categories
 Job Title: ${role}
 
 Return the category only.
-    `.trim(),
+      `.trim(),
         });
 
         const roleCategory = roleCategoryRaw.trim().replace(/["']/g, "");
 
-        // 📊 2. Generate AI Readiness Report
+        // 📊 Generate AI Readiness Audit using all employee inputs
         const { text: reportOutput } = await generateText({
             model: google("gemini-2.0-flash-001"),
             prompt: `
-You are an enterprise AI transformation consultant. Based on the user's answers below, create an accurate and realistic AI Readiness Audit.
+You are a senior enterprise AI transformation consultant conducting an AI Readiness Audit for a company employee. Your task is to analyse the following employee inputs in order to produce a precise, data-driven report.
 
-Use these fields to inform your judgement:
-- Role: ${role}
+The outputs must be personalised, grounded in operational realities, and benchmarked realistically against peers in similar roles and locations.
+
+---
+
+🎯 Use the following inputs to guide your analysis:
+
+- Company Name: ${companyname}
+- Location: ${location}
+- Job Title: ${role}
 - Department: ${department}
 - Team Size: ${teamsize}
-- Workflows: ${responsibilities}
-- Current AI Usage: ${aifamiliarity}
-- Bottlenecks: ${bottlenecks}
-- Desired Automation Areas: ${impactareas}
-- Primary Goal: ${prioritygoal}
-- Urgency: ${urgency}
+- Cross-Functional Collaboration: ${crossfunctioninteraction}
+- Core Responsibilities: ${responsibilities}
+- Tools Used to Track Work: ${trackingtools}
+- Hours Spent on Manual/Repetitive Tasks: ${manualhours}
+- AI / Automation Tools in Use: ${aitools}
+- Perceived Effectiveness of These Tools: ${aitoolimpact}
+- Remaining Manual Pain Points: ${manualpainpoints}
+- Operational Bottlenecks: ${bottlenecks}
+- If They Could Automate One Task: ${automationwish}
+- Examples of Redundancy / Duplicate Work: ${redundancyexamples}
+- Decision-Making Delays or Friction: ${decisionfriction}
+- Customer or User Complaints: ${customerpainpoints}
+- Primary Goal (Speed, Cost, Growth, etc): ${prioritygoal}
+- KPIs Being Tracked (or lack thereof): ${trackedmetrics}
+- If Given 5 Free Hours a Week, They Would Use It To...: ${timesavingimpact}
+- Concerns About AI: ${aiconcerns}
+- Self-Rated Familiarity with AI (1–5): ${aifamiliarity}
+- How They Think They Compare to Peers in AI Adoption: ${competitorcomparison}
+- Urgency for Change: ${urgency}
 
-Please return a JSON object with the following format:
+---
+
+🧠 Based on this, return a JSON object structured exactly like this:
+
 {
   "readinessScore": number (0-100),
   "benchmarkSummary": string,
-  "recommendations": [ "AI use case 1", "AI use case 2", ... ],
-  "strengths": [ "Strength 1", "Strength 2", ... ],
-  "weaknesses": [ "Weakness 1", "Weakness 2", ... ]
+  "recommendations": [ "AI use case 1", "AI use case 2", "AI use case 3" ],
+  "strengths": [ "Strength 1", "Strength 2" ],
+  "weaknesses": [ "Weakness 1", "Weakness 2" ]
 }
 
-Be highly realistic. Only assign a score above 80 if the company shows advanced familiarity and usage.
-Benchmark summary should compare this user to others in similar roles in their region.
-Recommendations should be highly relevant to their workflows and bottlenecks.
+---
+
+⚠️ Guidelines:
+
+- Be objective — don’t inflate scores. Only assign 80+ if they show high familiarity, active tools in use, strong KPI discipline, and urgency.
+- If team size is small, or tooling is minimal, score should reflect that.
+- Tailor recommendations to actual workflows and responsibilities.
+- Benchmark comparisons should reference common gaps or strengths in the given department, role, or geography.
+- Weaknesses must be constructive but direct. No fluff.
+
+Return only the JSON response. No commentary or markdown.
       `.trim(),
         });
 
@@ -88,32 +133,49 @@ Recommendations should be highly relevant to their workflows and bottlenecks.
             weaknesses,
         } = JSON.parse(cleaned);
 
-        // ✅ 3. Final interview object to store
+        // ✅ Store result in Firestore
         const interview = {
+            userId: userid,
             companyname,
+            location,
             role,
             roleCategory,
             department,
             teamsize,
+            crossfunctioninteraction,
             responsibilities,
-            aifamiliarity,
+            trackingtools,
+            manualhours,
+            aitools,
+            aitoolimpact,
+            manualpainpoints,
             bottlenecks,
-            impactareas,
+            automationwish,
+            redundancyexamples,
+            decisionfriction,
+            customerpainpoints,
             prioritygoal,
+            trackedmetrics,
+            timesavingimpact,
             urgency,
+            aiconcerns,
+            aifamiliarity,
+            competitorcomparison,
             readinessScore,
             benchmarkSummary,
             recommendations,
             strengths,
             weaknesses,
-            userId: userid,
             finalized: true,
             coverImage: getRandomInterviewCover(),
             createdAt: new Date().toISOString(),
             techstack: ["AI", "Automation"],
-            questions: ["What task consumes most of your day?", "What decisions could be automated?"],
+            questions: [
+                "What task consumes most of your day?",
+                "What decisions could be automated?"
+            ],
             type: "AI Readiness",
-            level: "N/A",
+            level: "N/A"
         };
 
         await db.collection("interviews").add(interview);
