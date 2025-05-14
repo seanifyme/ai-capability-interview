@@ -78,23 +78,46 @@ const Agent = ({
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
 
-    if (type === "generate") {
-      await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!, {
-        variableValues: {
+    try {
+      if (type === "generate") {
+        const workflowId = process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!;
+        if (!workflowId) {
+          console.error("❌ VAPI WORKFLOW ID is missing.");
+          alert("Something went wrong: VAPI Workflow ID not set.");
+          return;
+        }
+
+        console.log("🎯 Starting Vapi voice agent...");
+        console.log("🧾 Variables sent:", {
           username: userName,
           userid: userId,
-        },
-      });
-    } else {
-      const formattedQuestions = questions
-          ?.map((q) => `- ${q}`)
-          .join("\n") || "";
+        });
 
-      await vapi.start(interviewer, {
-        variableValues: { questions: formattedQuestions },
-      });
+        await vapi.start(workflowId, {
+          variableValues: {
+            username: userName,
+            userid: userId,
+          },
+        });
+      } else {
+        const formattedQuestions = questions?.map((q) => `- ${q}`).join("\n") || "";
+
+        console.log("🎯 Starting interview with questions:");
+        console.log(formattedQuestions);
+
+        await vapi.start(interviewer, {
+          variableValues: {
+            questions: formattedQuestions,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("❌ Error starting Vapi session:", error);
+      alert("Something went wrong starting the voice interview. Please try again.");
+      setCallStatus(CallStatus.INACTIVE); // Reset to safe state
     }
   };
+
 
   const handleDisconnect = () => {
     setCallStatus(CallStatus.FINISHED);

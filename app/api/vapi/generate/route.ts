@@ -8,6 +8,7 @@ export async function POST(request: Request) {
         const body = await request.json();
         console.log("🔥 Incoming Vapi request body:", body);
 
+        // ✅ Destructure fields
         const {
             userid,
             companyname,
@@ -36,6 +37,23 @@ export async function POST(request: Request) {
             competitorcomparison
         } = body;
 
+// ✅ Check for missing fields
+        const requiredFields = {
+            userid, companyname, location, role, department, teamsize,
+            crossfunctioninteraction, responsibilities, trackingtools, manualhours,
+            aitools, aitoolimpact, manualpainpoints, bottlenecks, automationwish,
+            redundancyexamples, decisionfriction, customerpainpoints, prioritygoal,
+            trackedmetrics, timesavingimpact, urgency, aiconcerns, aifamiliarity, competitorcomparison
+        };
+
+        for (const [key, value] of Object.entries(requiredFields)) {
+            if (!value || typeof value !== "string" || value.trim() === "") {
+                console.error(`❌ Missing or empty field: ${key}`);
+                return Response.json({ success: false, error: `Missing or empty field: ${key}` }, { status: 400 });
+            }
+        }
+
+
         // 🔍 Classify role for dashboard filtering
         const { text: roleCategoryRaw } = await generateText({
             model: google("gemini-2.0-flash-001"),
@@ -61,6 +79,7 @@ Return the category only.
         const roleCategory = roleCategoryRaw.trim().replace(/["']/g, "");
 
         // 📊 Generate AI Readiness Audit using all employee inputs
+        console.log("🧠 Sending prompt to Gemini...");
         const { text: reportOutput } = await generateText({
             model: google("gemini-2.0-flash-001"),
             prompt: `
