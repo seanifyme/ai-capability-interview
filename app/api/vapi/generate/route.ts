@@ -5,63 +5,71 @@ import { getRandomInterviewCover } from "@/lib/utils";
 
 export async function POST(request: Request) {
     try {
+        /* ─────────────────────────────────────────
+           1. Parse the JSON body coming from Vapi’s
+              storeInterviewExtended function tool
+        ───────────────────────────────────────── */
         const body = await request.json();
         console.log("🔥 Incoming Vapi request body:", body);
 
-        // ✅ Destructure fields
+        /* Extract the fields defined in the tool-schema */
         const {
-            userid,
-            companyname,
-            location,
+            userId,
+            employeeId,
             role,
             department,
-            teamsize,
-            crossfunctioninteraction,
+            teamSize,
             responsibilities,
-            trackingtools,
-            manualhours,
-            aitools,
-            aitoolimpact,
-            manualpainpoints,
-            bottlenecks,
-            automationwish,
-            redundancyexamples,
-            decisionfriction,
-            customerpainpoints,
-            prioritygoal,
-            trackedmetrics,
-            timesavingimpact,
-            urgency,
-            aiconcerns,
-            aifamiliarity,
-            competitorcomparison
+            processMap,
+            metricsUsed,
+            painPoints,
+            rootCauses,
+            currentTools,
+            dataFlows,
+            aiExposure,
+            aiOpportunities,
+            changeAppetite,
+            blockers
         } = body;
 
-// ✅ Check for missing fields
-        const requiredFields = {
-            userid, companyname, location, role, department, teamsize,
-            crossfunctioninteraction, responsibilities, trackingtools, manualhours,
-            aitools, aitoolimpact, manualpainpoints, bottlenecks, automationwish,
-            redundancyexamples, decisionfriction, customerpainpoints, prioritygoal,
-            trackedmetrics, timesavingimpact, urgency, aiconcerns, aifamiliarity, competitorcomparison
+        /* ─────────────────────────────────────────
+           2. Basic validation
+        ───────────────────────────────────────── */
+        const required: Record<string, unknown> = {
+            userId,
+            employeeId,
+            role,
+            department,
+            responsibilities,
+            painPoints,
+            currentTools,
+            aiExposure,
+            changeAppetite
         };
 
-        for (const [key, value] of Object.entries(requiredFields)) {
-            if (!value || typeof value !== "string" || value.trim() === "") {
+        for (const [key, value] of Object.entries(required)) {
+            if (
+                value === undefined ||
+                value === null ||
+                (typeof value === "string" && value.trim() === "")
+            ) {
                 console.error(`❌ Missing or empty field: ${key}`);
-                return Response.json({ success: false, error: `Missing or empty field: ${key}` }, { status: 400 });
+                return Response.json(
+                    { success: false, error: `Missing or empty field: ${key}` },
+                    { status: 400 }
+                );
             }
         }
 
-
-        // 🔍 Classify role for dashboard filtering
+        /* ─────────────────────────────────────────
+           3. Classify the role to help your dashboard
+        ───────────────────────────────────────── */
         const { text: roleCategoryRaw } = await generateText({
             model: google("gemini-2.0-flash-001"),
             prompt: `
-You are a role classification AI.
+You are a role-classification AI.
 
-Based on the job title below, assign the user to one of the following categories:
-
+Assign the role below to one of:
 - Software Engineering
 - Product Management
 - Product Design / UX
@@ -70,116 +78,81 @@ Based on the job title below, assign the user to one of the following categories
 - Leadership / Strategy
 - Other / Admin
 
-Job Title: ${role}
+Role: ${role}
 
 Return the category only.
-      `.trim(),
+      `.trim()
         });
 
         const roleCategory = roleCategoryRaw.trim().replace(/["']/g, "");
 
-        // 📊 Generate AI Readiness Audit using all employee inputs
+        /* ─────────────────────────────────────────
+           4. Generate the AI-Readiness report
+        ───────────────────────────────────────── */
         console.log("🧠 Sending prompt to Gemini...");
         const { text: reportOutput } = await generateText({
             model: google("gemini-2.0-flash-001"),
             prompt: `
-You are a senior enterprise AI transformation consultant conducting an AI Readiness Audit for a company employee. Your task is to analyse the following employee inputs in order to produce a precise, data-driven report.
+You are a senior AI-strategy consultant. Produce a concise
+AI-Readiness Audit using the employee inputs below.
 
-The outputs must be personalised, grounded in operational realities, and benchmarked realistically against peers in similar roles and locations.
+Inputs:
+• Role: ${role}
+• Department: ${department}
+• Team size: ${teamSize}
+• Responsibilities: ${responsibilities}
+• Process map: ${processMap}
+• Metrics used: ${metricsUsed}
+• Pain-points: ${painPoints}
+• Root causes: ${rootCauses}
+• Current tools: ${currentTools}
+• Data flows: ${dataFlows}
+• Existing AI exposure: ${aiExposure}
+• High-impact AI opportunities: ${aiOpportunities}
+• Appetite for change: ${changeAppetite}
+• Blockers: ${blockers}
 
----
-
-🎯 Use the following inputs to guide your analysis:
-
-- Company Name: ${companyname}
-- Location: ${location}
-- Job Title: ${role}
-- Department: ${department}
-- Team Size: ${teamsize}
-- Cross-Functional Collaboration: ${crossfunctioninteraction}
-- Core Responsibilities: ${responsibilities}
-- Tools Used to Track Work: ${trackingtools}
-- Hours Spent on Manual/Repetitive Tasks: ${manualhours}
-- AI / Automation Tools in Use: ${aitools}
-- Perceived Effectiveness of These Tools: ${aitoolimpact}
-- Remaining Manual Pain Points: ${manualpainpoints}
-- Operational Bottlenecks: ${bottlenecks}
-- If They Could Automate One Task: ${automationwish}
-- Examples of Redundancy / Duplicate Work: ${redundancyexamples}
-- Decision-Making Delays or Friction: ${decisionfriction}
-- Customer or User Complaints: ${customerpainpoints}
-- Primary Goal (Speed, Cost, Growth, etc): ${prioritygoal}
-- KPIs Being Tracked (or lack thereof): ${trackedmetrics}
-- If Given 5 Free Hours a Week, They Would Use It To...: ${timesavingimpact}
-- Concerns About AI: ${aiconcerns}
-- Self-Rated Familiarity with AI (1–5): ${aifamiliarity}
-- How They Think They Compare to Peers in AI Adoption: ${competitorcomparison}
-- Urgency for Change: ${urgency}
-
----
-
-🧠 Based on this, return a JSON object structured exactly like this:
-
+Return **only** JSON of the form:
 {
-  "readinessScore": number (0-100),
+  "readinessScore": number,
   "benchmarkSummary": string,
-  "recommendations": [ "AI use case 1", "AI use case 2", "AI use case 3" ],
-  "strengths": [ "Strength 1", "Strength 2" ],
-  "weaknesses": [ "Weakness 1", "Weakness 2" ]
+  "recommendations": [string],
+  "strengths": [string],
+  "weaknesses": [string]
 }
-
----
-
-⚠️ Guidelines:
-
-- Be objective — don’t inflate scores. Only assign 80+ if they show high familiarity, active tools in use, strong KPI discipline, and urgency.
-- If team size is small, or tooling is minimal, score should reflect that.
-- Tailor recommendations to actual workflows and responsibilities.
-- Benchmark comparisons should reference common gaps or strengths in the given department, role, or geography.
-- Weaknesses must be constructive but direct. No fluff.
-
-Return only the JSON response. No commentary or markdown.
-      `.trim(),
+      `.trim()
         });
 
         const cleaned = reportOutput.replace(/```json|```/g, "").trim();
-
         const {
             readinessScore,
             benchmarkSummary,
             recommendations,
             strengths,
-            weaknesses,
+            weaknesses
         } = JSON.parse(cleaned);
 
-        // ✅ Store result in Firestore
-        const interview = {
-            userId: userid,
-            companyname,
-            location,
+        /* ─────────────────────────────────────────
+           5. Store everything in Firestore
+        ───────────────────────────────────────── */
+        const interviewDoc = {
+            userId,
+            employeeId,
             role,
             roleCategory,
             department,
-            teamsize,
-            crossfunctioninteraction,
+            teamSize,
             responsibilities,
-            trackingtools,
-            manualhours,
-            aitools,
-            aitoolimpact,
-            manualpainpoints,
-            bottlenecks,
-            automationwish,
-            redundancyexamples,
-            decisionfriction,
-            customerpainpoints,
-            prioritygoal,
-            trackedmetrics,
-            timesavingimpact,
-            urgency,
-            aiconcerns,
-            aifamiliarity,
-            competitorcomparison,
+            processMap,
+            metricsUsed,
+            painPoints,
+            rootCauses,
+            currentTools,
+            dataFlows,
+            aiExposure,
+            aiOpportunities,
+            changeAppetite,
+            blockers,
             readinessScore,
             benchmarkSummary,
             recommendations,
@@ -188,21 +161,18 @@ Return only the JSON response. No commentary or markdown.
             finalized: true,
             coverImage: getRandomInterviewCover(),
             createdAt: new Date().toISOString(),
-            techstack: ["AI", "Automation"],
-            questions: [
-                "What task consumes most of your day?",
-                "What decisions could be automated?"
-            ],
-            type: "AI Readiness",
-            level: "N/A"
+            type: "AI Readiness"
         };
 
-        await db.collection("interviews").add(interview);
+        await db.collection("interviews").add(interviewDoc);
         console.log("✅ Interview saved to Firestore");
 
         return Response.json({ success: true }, { status: 200 });
     } catch (error) {
         console.error("🔥 Error in /api/vapi/generate:", error);
-        return Response.json({ success: false, error: error }, { status: 500 });
+        return Response.json(
+            { success: false, error: (error as Error).message },
+            { status: 500 }
+        );
     }
 }
