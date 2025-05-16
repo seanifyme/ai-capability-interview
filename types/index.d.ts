@@ -2,7 +2,7 @@
    Global type declarations
    ──────────────────────────────────────────────────────────── */
 
-/* Profiling enums */
+/* Profiling enums (kept in sync with AuthForm.tsx) */
 type Seniority = "Executive" | "Senior" | "Mid-level" | "Junior";
 
 type Department =
@@ -13,6 +13,16 @@ type Department =
     | "Operations"
     | "Marketing";
 
+/* UAE emirates (Location dropdown) */
+type Emirate =
+    | "Abu Dhabi"
+    | "Dubai"
+    | "Sharjah"
+    | "Ajman"
+    | "Umm Al Quwain"
+    | "Ras Al Khaimah"
+    | "Fujairah";
+
 /* ──────────────────────────────────────────────────────────────
    AI-readiness / interview types
    ──────────────────────────────────────────────────────────── */
@@ -20,8 +30,8 @@ type Department =
 interface Feedback {
   id?: string;
   interviewId: string;
-  userId?: string;                // optional since not always needed
-  totalScore?: number;            // some interviews may not have it
+  userId?: string;
+  totalScore?: number;
   benchmark?: string;
   recommendations?: string[];
   categoryScores?: Array<{
@@ -46,7 +56,7 @@ interface Interview {
   type: string;
   finalized: boolean;
 
-  /* 🔥 AI Readiness Audit Fields */
+  /* 🔥 AI-Readiness Audit fields */
   readinessScore?: number;
   benchmarkSummary?: string;
   recommendations?: string[];
@@ -80,7 +90,7 @@ interface SignUpParams {
   jobTitle?: string;
   seniority?: Seniority;
   department?: Department;
-  location?: string;
+  location?: Emirate;
 }
 
 /* User object returned by getCurrentUser() */
@@ -92,7 +102,7 @@ interface User {
   jobTitle?: string | null;
   seniority?: Seniority | null;
   department?: Department | null;
-  location?: string | null;
+  location?: Emirate | null;
 }
 
 /* ──────────────────────────────────────────────────────────────

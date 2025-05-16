@@ -1,14 +1,15 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import { z } from "zod";
-import Link from "next/link";
 import Image from "next/image";
-import { toast } from "sonner";
-import { auth } from "@/firebase/client";
-import { useForm } from "react-hook-form";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "sonner";
 
+import { auth } from "@/firebase/client";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -16,30 +17,45 @@ import {
 
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-
-import { signIn, signUp } from "@/lib/actions/auth.action";
 import FormField from "./FormField";
 
-// ⬇️ replace the existing authFormSchema function
+import { signIn, signUp } from "@/lib/actions/auth.action";
+
+/* ─── constants ─────────────────────────────────────────────── */
+const SENIORITY_OPTIONS = ["Executive", "Senior", "Mid-level", "Junior"] as const;
+const DEPARTMENT_OPTIONS = [
+  "Technology",
+  "Product",
+  "HR",
+  "Finance",
+  "Operations",
+  "Marketing",
+] as const;
+const EMIRATE_OPTIONS = [
+  "Abu Dhabi",
+  "Dubai",
+  "Sharjah",
+  "Ajman",
+  "Umm Al Quwain",
+  "Ras Al Khaimah",
+  "Fujairah",
+] as const;
+
+/* ─── dynamic form schema ───────────────────────────────────── */
 const authFormSchema = (type: FormType) =>
     z.object({
       name: type === "sign-up" ? z.string().min(3) : z.string().optional(),
       email: z.string().email(),
       password: z.string().min(3),
-      // 👇 new fields – all optional during sign-up so the form stays “light”
+
+      /* optional profiling fields (10-second skip-able) */
       jobTitle: z.string().optional(),
-      seniority: z.enum(["Executive", "Senior", "Mid-level", "Junior"]).optional(),
-      department: z.enum([
-        "Technology",
-        "Product",
-        "HR",
-        "Finance",
-        "Operations",
-        "Marketing",
-      ]).optional(),
-      location: z.string().optional(),
+      seniority: z.enum(SENIORITY_OPTIONS).optional(),
+      department: z.enum(DEPARTMENT_OPTIONS).optional(),
+      location: z.enum(EMIRATE_OPTIONS).optional(),
     });
 
+/* ─── component ─────────────────────────────────────────────── */
 const AuthForm = ({ type }: { type: FormType }) => {
   const router = useRouter();
 
@@ -53,26 +69,37 @@ const AuthForm = ({ type }: { type: FormType }) => {
       jobTitle: "",
       seniority: undefined,
       department: undefined,
-      location: "",
+      location: undefined,
     },
   });
 
+  /* ── submit handler ─────────────────────────────────────── */
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       if (type === "sign-up") {
-        const { name, email, password, jobTitle, seniority, department, location } = data;
-
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
+        const {
+          name,
           email,
-          password
+          password,
+          jobTitle,
+          seniority,
+          department,
+          location,
+        } = data;
+
+        /* Firebase auth */
+        const userCredential = await createUserWithEmailAndPassword(
+            auth,
+            email,
+            password,
         );
 
+        /* Persist extra profile data */
         const result = await signUp({
           uid: userCredential.user.uid,
           name: name!,
           email,
-          password,
+          password, // still passed so our SignUpParams matches
           jobTitle,
           seniority,
           department,
@@ -87,143 +114,133 @@ const AuthForm = ({ type }: { type: FormType }) => {
         toast.success("Account created successfully. Please sign in.");
         router.push("/sign-in");
       } else {
+        /* SIGN-IN flow */
         const { email, password } = data;
 
         const userCredential = await signInWithEmailAndPassword(
-          auth,
-          email,
-          password
+            auth,
+            email,
+            password,
         );
 
         const idToken = await userCredential.user.getIdToken();
         if (!idToken) {
-          toast.error("Sign in Failed. Please try again.");
+          toast.error("Sign in failed. Please try again.");
           return;
         }
 
-        await signIn({
-          email,
-          idToken,
-        });
+        await signIn({ email, idToken });
 
         toast.success("Signed in successfully.");
         router.push("/");
       }
     } catch (error) {
-      console.log(error);
-      toast.error(`There was an error: ${error}`);
+      console.error(error);
+      toast.error(`There was an error: ${String(error)}`);
     }
   };
 
   const isSignIn = type === "sign-in";
 
+  /* ── render ─────────────────────────────────────────────── */
   return (
-    <div className="card-border lg:min-w-[566px]">
-      <div className="flex flex-col gap-6 card py-14 px-10">
-        <div className="flex flex-row gap-2 justify-center">
-          <Image src="/logo.svg" alt="logo" height={32} width={38} />
-          <h2 className="text-primary-100">SingularShift</h2>
-        </div>
+      <div className="card-border lg:min-w-[566px]">
+        <div className="flex flex-col gap-6 card py-14 px-10">
+          {/* Brand */}
+          <div className="flex items-center justify-center gap-2">
+            <Image src="/logo.svg" alt="logo" height={32} width={38} />
+            <h2 className="text-primary-100">SingularShift</h2>
+          </div>
 
-        <h3>Discover AI-agent opportunities inside your organisation</h3>
+          <h3>Discover AI-agent opportunities inside your organisation</h3>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="w-full space-y-6 mt-4 form"
-          >
-            {!isSignIn && (
+          <Form {...form}>
+            <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="w-full space-y-6 mt-4 form"
+            >
+              {/* ── core fields ───────────────────────────── */}
+              {!isSignIn && (
+                  <FormField
+                      control={form.control}
+                      name="name"
+                      label="Name"
+                      placeholder="Your name"
+                      type="text"
+                  />
+              )}
+
               <FormField
-                control={form.control}
-                name="name"
-                label="Name"
-                placeholder="Your Name"
-                type="text"
+                  control={form.control}
+                  name="email"
+                  label="Email"
+                  placeholder="your@email.com"
+                  type="email"
               />
-            )}
 
-            <FormField
-              control={form.control}
-              name="email"
-              label="Email"
-              placeholder="Your email address"
-              type="email"
-            />
+              <FormField
+                  control={form.control}
+                  name="password"
+                  label="Password"
+                  placeholder="Enter your password"
+                  type="password"
+              />
 
-            <FormField
-              control={form.control}
-              name="password"
-              label="Password"
-              placeholder="Enter your password"
-              type="password"
-            />
+              {/* ── optional profiling fields (sign-up only) ───── */}
+              {!isSignIn && (
+                  <>
+                    <FormField
+                        control={form.control}
+                        name="jobTitle"
+                        label="Job title"
+                        placeholder="e.g. CTO"
+                        type="text"
+                    />
 
-            {!isSignIn && (
-                <>
-                  {/* Existing Name field … */}
+                    <FormField
+                        control={form.control}
+                        name="seniority"
+                        label="Seniority level"
+                        type="select"
+                        options={Array.from(SENIORITY_OPTIONS)}
+                    />
 
-                  {/* ─── Job Title (free text) ─────────────────────────── */}
-                  <FormField
-                      control={form.control}
-                      name="jobTitle"
-                      label="Job title"
-                      placeholder="e.g. CTO"
-                      type="text"
-                  />
+                    <FormField
+                        control={form.control}
+                        name="department"
+                        label="Department"
+                        type="select"
+                        options={Array.from(DEPARTMENT_OPTIONS)}
+                    />
 
-                  {/* ─── Seniority (select) ───────────────────────────── */}
-                  <FormField
-                      control={form.control}
-                      name="seniority"
-                      label="Seniority level"
-                      type="select"
-                      options={["Executive", "Senior", "Mid-level", "Junior"]}
-                  />
+                    <FormField
+                        control={form.control}
+                        name="location"
+                        label="Location (UAE emirate)"
+                        type="select"
+                        options={Array.from(EMIRATE_OPTIONS)}
+                    />
+                  </>
+              )}
 
-                  {/* ─── Department (select) ──────────────────────────── */}
-                  <FormField
-                      control={form.control}
-                      name="department"
-                      label="Department"
-                      type="select"
-                      options={[
-                        "Technology",
-                        "Product",
-                        "HR",
-                        "Finance",
-                        "Operations",
-                        "Marketing",
-                      ]}
-                  />
+              <Button className="btn" type="submit">
+                {isSignIn ? "Sign In" : "Create an Account"}
+              </Button>
+            </form>
+          </Form>
 
-                  {/* ─── Location (free text) ────────────────────────── */}
-                  <FormField
-                      control={form.control}
-                      name="location"
-                      label="Location"
-                      placeholder="e.g. Dubai"
-                      type="text"
-                  />
-                </>
-            )}
-
-            <Button className="btn" type="submit">
-              {isSignIn ? "Sign In" : "Create an Account"}
-            </Button>
-          </form>
-        </Form>
-
-        <p className="text-center">
-          {isSignIn ? "No account yet?" : "Have an account already?"}
-          <Link
-            href={!isSignIn ? "/sign-in" : "/sign-up"}
-            className="font-bold text-user-primary ml-1"
-          >
-            {!isSignIn ? "Sign In" : "Sign Up"}
-          </Link>
-        </p>
+          {/* switch link */}
+          <p className="text-center">
+            {isSignIn ? "No account yet?" : "Have an account already?"}
+            <Link
+                href={isSignIn ? "/sign-up" : "/sign-in"}
+                className="font-bold text-user-primary ml-1"
+            >
+              {isSignIn ? "Sign Up" : "Sign In"}
+            </Link>
+          </p>
+        </div>
       </div>
-    </div>
   );
 };
 
