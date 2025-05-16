@@ -1,5 +1,4 @@
 import { Controller, Control, FieldValues, Path } from "react-hook-form";
-
 import {
     FormItem,
     FormLabel,
@@ -8,19 +7,16 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-/* ─── props ─────────────────────────────────────────────────── */
 interface FormFieldProps<T extends FieldValues> {
     control: Control<T>;
     name: Path<T>;
     label: string;
     placeholder?: string;
-    /* Allowed HTML input types + our custom “select” */
     type?: "text" | "email" | "password" | "select";
-    /** Only used when type === "select" */
     options?: string[];
+    compact?: boolean;                    // 🆕
 }
 
-/* ─── component ─────────────────────────────────────────────── */
 const FormField = <T extends FieldValues>({
                                               control,
                                               name,
@@ -28,9 +24,11 @@ const FormField = <T extends FieldValues>({
                                               placeholder,
                                               type = "text",
                                               options = [],
+                                              compact = false,
                                           }: FormFieldProps<T>) => {
-    /* Tailwind utility classes reused by both <input> and <select> */
-    const baseClasses = "input";
+    const base = "input w-full";          // reuse existing Tailwind ‘input’ classes
+    const sm   = "py-2 px-3 text-sm";     // compact tweak
+    const cls  = compact ? `${base} ${sm}` : base;
 
     return (
         <Controller
@@ -39,10 +37,9 @@ const FormField = <T extends FieldValues>({
             render={({ field }) => (
                 <FormItem>
                     <FormLabel className="label">{label}</FormLabel>
-
                     <FormControl>
                         {type === "select" ? (
-                            <select {...field} className={`${baseClasses} appearance-none`}>
+                            <select {...field} className={`${cls} appearance-none`}>
                                 <option value="">Select…</option>
                                 {options.map((opt) => (
                                     <option key={opt} value={opt}>
@@ -51,15 +48,9 @@ const FormField = <T extends FieldValues>({
                                 ))}
                             </select>
                         ) : (
-                            <Input
-                                {...field}
-                                className={baseClasses}
-                                type={type}
-                                placeholder={placeholder}
-                            />
+                            <Input {...field} className={cls} type={type} placeholder={placeholder} />
                         )}
                     </FormControl>
-
                     <FormMessage />
                 </FormItem>
             )}

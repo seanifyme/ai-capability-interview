@@ -4,9 +4,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 
 import { auth } from "@/firebase/client";
@@ -18,50 +18,32 @@ import {
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import FormField from "./FormField";
-
 import { signIn, signUp } from "@/lib/actions/auth.action";
 
-/* ─── constants ─────────────────────────────────────────────── */
-const SENIORITY_OPTIONS = ["Executive", "Senior", "Mid-level", "Junior"] as const;
-const DEPARTMENT_OPTIONS = [
-  "Technology",
-  "Product",
-  "HR",
-  "Finance",
-  "Operations",
-  "Marketing",
-] as const;
-const EMIRATE_OPTIONS = [
-  "Abu Dhabi",
-  "Dubai",
-  "Sharjah",
-  "Ajman",
-  "Umm Al Quwain",
-  "Ras Al Khaimah",
-  "Fujairah",
-] as const;
+/* ─── dropdown options (keep in sync with types/index.d.ts) ─── */
+const SENIORITY = ["Executive", "Senior", "Mid-level", "Junior"] as const;
+const DEPT      = ["Technology", "Product", "HR", "Finance", "Operations", "Marketing"] as const;
+const EMIRATE   = ["Abu Dhabi","Dubai","Sharjah","Ajman","Umm Al Quwain","Ras Al Khaimah","Fujairah"] as const;
 
-/* ─── dynamic form schema ───────────────────────────────────── */
-const authFormSchema = (type: FormType) =>
+/* ─── zod schema (dynamic based on form type) ───────────────── */
+const authFormSchema = (formType: FormType) =>
     z.object({
-      name: type === "sign-up" ? z.string().min(3) : z.string().optional(),
-      email: z.string().email(),
-      password: z.string().min(3),
+      name:      formType === "sign-up" ? z.string().min(3) : z.string().optional(),
+      email:     z.string().email(),
+      password:  z.string().min(3),
 
-      /* optional profiling fields (10-second skip-able) */
-      jobTitle: z.string().optional(),
-      seniority: z.enum(SENIORITY_OPTIONS).optional(),
-      department: z.enum(DEPARTMENT_OPTIONS).optional(),
-      location: z.enum(EMIRATE_OPTIONS).optional(),
+      jobTitle:  z.string().optional(),
+      seniority: z.enum(SENIORITY).optional(),
+      department:z.enum(DEPT).optional(),
+      location:  z.enum(EMIRATE).optional(),
     });
 
 /* ─── component ─────────────────────────────────────────────── */
 const AuthForm = ({ type }: { type: FormType }) => {
   const router = useRouter();
 
-  const formSchema = authFormSchema(type);
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<ReturnType<typeof authFormSchema>>>({
+    resolver: zodResolver(authFormSchema(type)),
     defaultValues: {
       name: "",
       email: "",
@@ -73,8 +55,8 @@ const AuthForm = ({ type }: { type: FormType }) => {
     },
   });
 
-  /* ── submit handler ─────────────────────────────────────── */
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+  /* submit handler (same functionality) */
+  const onSubmit = async (data: z.infer<ReturnType<typeof authFormSchema>>) => {
     try {
       if (type === "sign-up") {
         const {
@@ -87,19 +69,17 @@ const AuthForm = ({ type }: { type: FormType }) => {
           location,
         } = data;
 
-        /* Firebase auth */
         const userCredential = await createUserWithEmailAndPassword(
             auth,
             email,
             password,
         );
 
-        /* Persist extra profile data */
         const result = await signUp({
           uid: userCredential.user.uid,
           name: name!,
           email,
-          password, // still passed so our SignUpParams matches
+          password,
           jobTitle,
           seniority,
           department,
@@ -114,7 +94,6 @@ const AuthForm = ({ type }: { type: FormType }) => {
         toast.success("Account created successfully. Please sign in.");
         router.push("/sign-in");
       } else {
-        /* SIGN-IN flow */
         const { email, password } = data;
 
         const userCredential = await signInWithEmailAndPassword(
@@ -130,25 +109,24 @@ const AuthForm = ({ type }: { type: FormType }) => {
         }
 
         await signIn({ email, idToken });
-
         toast.success("Signed in successfully.");
         router.push("/");
       }
-    } catch (error) {
-      console.error(error);
-      toast.error(`There was an error: ${String(error)}`);
+    } catch (err) {
+      console.error(err);
+      toast.error(`There was an error: ${String(err)}`);
     }
   };
 
   const isSignIn = type === "sign-in";
 
-  /* ── render ─────────────────────────────────────────────── */
+  /* ─── render ─────────────────────────────────────────────── */
   return (
       <div className="card-border lg:min-w-[566px]">
-        <div className="flex flex-col gap-6 card py-14 px-10">
+        <div className="card flex flex-col gap-6 py-14 px-10">
           {/* Brand */}
           <div className="flex items-center justify-center gap-2">
-            <Image src="/logo.svg" alt="logo" height={32} width={38} />
+            <Image src="/logo.svg" alt="logo" width={38} height={32} />
             <h2 className="text-primary-100">SingularShift</h2>
           </div>
 
@@ -157,9 +135,9 @@ const AuthForm = ({ type }: { type: FormType }) => {
           <Form {...form}>
             <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="w-full space-y-6 mt-4 form"
+                className="w-full space-y-4 mt-4 form"
             >
-              {/* ── core fields ───────────────────────────── */}
+              {/* Core fields */}
               {!isSignIn && (
                   <FormField
                       control={form.control}
@@ -167,6 +145,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
                       label="Name"
                       placeholder="Your name"
                       type="text"
+                      compact
                   />
               )}
 
@@ -174,63 +153,66 @@ const AuthForm = ({ type }: { type: FormType }) => {
                   control={form.control}
                   name="email"
                   label="Email"
-                  placeholder="your@email.com"
+                  placeholder="you@email.com"
                   type="email"
+                  compact
               />
 
               <FormField
                   control={form.control}
                   name="password"
                   label="Password"
-                  placeholder="Enter your password"
+                  placeholder="••••••••"
                   type="password"
+                  compact
               />
 
-              {/* ── optional profiling fields (sign-up only) ───── */}
+              {/* Profiling fields (sign-up only) */}
               {!isSignIn && (
-                  <>
+                  <div className="grid gap-4 md:grid-cols-2">
                     <FormField
                         control={form.control}
                         name="jobTitle"
                         label="Job title"
                         placeholder="e.g. CTO"
                         type="text"
+                        compact
                     />
-
                     <FormField
                         control={form.control}
                         name="seniority"
-                        label="Seniority level"
+                        label="Seniority"
                         type="select"
-                        options={Array.from(SENIORITY_OPTIONS)}
+                        options={Array.from(SENIORITY)}
+                        compact
                     />
-
                     <FormField
                         control={form.control}
                         name="department"
                         label="Department"
                         type="select"
-                        options={Array.from(DEPARTMENT_OPTIONS)}
+                        options={Array.from(DEPT)}
+                        compact
                     />
-
                     <FormField
                         control={form.control}
                         name="location"
-                        label="Location (UAE emirate)"
+                        label="Location"
                         type="select"
-                        options={Array.from(EMIRATE_OPTIONS)}
+                        options={Array.from(EMIRATE)}
+                        compact
                     />
-                  </>
+                  </div>
               )}
 
-              <Button className="btn" type="submit">
+              <Button className="btn w-full" type="submit">
                 {isSignIn ? "Sign In" : "Create an Account"}
               </Button>
             </form>
           </Form>
 
-          {/* switch link */}
-          <p className="text-center">
+          {/* Switch link */}
+          <p className="text-center text-sm">
             {isSignIn ? "No account yet?" : "Have an account already?"}
             <Link
                 href={isSignIn ? "/sign-up" : "/sign-in"}
