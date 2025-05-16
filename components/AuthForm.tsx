@@ -230,7 +230,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
 
               {/* Submit button full width */}
               <div className="col-span-2">
-                <Button className="btn" type="submit">
+                <Button className="btn w-full bg-[#007FF4] hover:bg-[#0069CF]" type="submit">
                   {isSignIn ? "Sign In" : "Create an Account"}
                 </Button>
               </div>
