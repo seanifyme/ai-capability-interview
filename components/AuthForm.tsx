@@ -139,7 +139,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
 
   /* ─── render ─────────────────────────────────────────────── */
   return (
-      <div className="card-border w-full max-w-2xl">
+      <div className="card-border w-full max-w-xl">
         <div className="card flex flex-col gap-6 py-12 px-8">
           {/* Brand */}
           <div className="flex items-center justify-center gap-2">
@@ -196,7 +196,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
                     <FormField
                         control={form.control}
                         name="jobTitle"
-                        label="Job title"
+                        label="Job Title"
                         placeholder="e.g. CTO"
                         type="text"
                         compact
@@ -230,7 +230,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
 
               {/* Submit button full width */}
               <div className="col-span-2">
-                <Button className="btn w-full" type="submit">
+                <Button className="btn" type="submit">
                   {isSignIn ? "Sign In" : "Create an Account"}
                 </Button>
               </div>
