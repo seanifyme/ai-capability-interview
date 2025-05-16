@@ -104,10 +104,10 @@ const Agent = ({
         variableValues: {
           userId,
           userName,
-          "user.jobTitle": jobTitle,
-          "user.department": department,
-          "user.seniority": seniority,
-          "user.location": location,
+          user_jobTitle: jobTitle,
+          user_department: department,
+          user_seniority: seniority,
+          user_location: location,
         },
       });
     } catch (e) {
