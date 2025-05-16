@@ -26,7 +26,7 @@ const FormField = <T extends FieldValues>({
                                               options = [],
                                               compact = false,
                                           }: FormFieldProps<T>) => {
-    const base = "input w-full";          // reuse existing Tailwind ‘input’ classes
+    const base = "input w-full border border-white/60";          // reuse existing Tailwind ‘input’ classes
     const sm   = "py-2 px-3 text-sm";     // compact tweak
     const cls  = compact ? `${base} ${sm}` : base;
 
