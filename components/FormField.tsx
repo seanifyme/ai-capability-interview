@@ -39,7 +39,7 @@ const FormField = <T extends FieldValues>({
                     <FormLabel className="label">{label}</FormLabel>
                     <FormControl>
                         {type === "select" ? (
-                            <select {...field} className={`${cls} appearance-none`}>
+                            <select {...field} className={`${cls} rounded-md`}>
                                 <option value="">Select…</option>
                                 {options.map((opt) => (
                                     <option key={opt} value={opt}>
