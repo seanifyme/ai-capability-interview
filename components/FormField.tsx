@@ -9,11 +9,12 @@ import {
 import { Input } from "@/components/ui/input";
 
 interface FormFieldProps<T extends FieldValues> {
-  control: Control<T>;
-  name: Path<T>;
-  label: string;
-  placeholder?: string;
-  type?: "text" | "email" | "password";
+    control: Control<T>;
+    name: Path<T>;
+    label: string;
+    placeholder?: string;
+    type?: "text" | "email" | "password" | "select";   // ✅ "select" is here
+    options?: string[];                                // ✅ needed for selects
 }
 
 const FormField = <T extends FieldValues>({

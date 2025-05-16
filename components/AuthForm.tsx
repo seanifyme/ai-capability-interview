@@ -20,13 +20,25 @@ import { Button } from "@/components/ui/button";
 import { signIn, signUp } from "@/lib/actions/auth.action";
 import FormField from "./FormField";
 
-const authFormSchema = (type: FormType) => {
-  return z.object({
-    name: type === "sign-up" ? z.string().min(3) : z.string().optional(),
-    email: z.string().email(),
-    password: z.string().min(3),
-  });
-};
+// ⬇️ replace the existing authFormSchema function
+const authFormSchema = (type: FormType) =>
+    z.object({
+      name: type === "sign-up" ? z.string().min(3) : z.string().optional(),
+      email: z.string().email(),
+      password: z.string().min(3),
+      // 👇 new fields – all optional during sign-up so the form stays “light”
+      jobTitle: z.string().optional(),
+      seniority: z.enum(["Executive", "Senior", "Mid-level", "Junior"]).optional(),
+      department: z.enum([
+        "Technology",
+        "Product",
+        "HR",
+        "Finance",
+        "Operations",
+        "Marketing",
+      ]).optional(),
+      location: z.string().optional(),
+    });
 
 const AuthForm = ({ type }: { type: FormType }) => {
   const router = useRouter();
@@ -38,13 +50,17 @@ const AuthForm = ({ type }: { type: FormType }) => {
       name: "",
       email: "",
       password: "",
+      jobTitle: "",
+      seniority: undefined,
+      department: undefined,
+      location: "",
     },
   });
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       if (type === "sign-up") {
-        const { name, email, password } = data;
+        const { name, email, password, jobTitle, seniority, department, location } = data;
 
         const userCredential = await createUserWithEmailAndPassword(
           auth,
@@ -57,6 +73,10 @@ const AuthForm = ({ type }: { type: FormType }) => {
           name: name!,
           email,
           password,
+          jobTitle,
+          seniority,
+          department,
+          location,
         });
 
         if (!result.success) {
@@ -137,6 +157,55 @@ const AuthForm = ({ type }: { type: FormType }) => {
               placeholder="Enter your password"
               type="password"
             />
+
+            {!isSignIn && (
+                <>
+                  {/* Existing Name field … */}
+
+                  {/* ─── Job Title (free text) ─────────────────────────── */}
+                  <FormField
+                      control={form.control}
+                      name="jobTitle"
+                      label="Job title"
+                      placeholder="e.g. CTO"
+                      type="text"
+                  />
+
+                  {/* ─── Seniority (select) ───────────────────────────── */}
+                  <FormField
+                      control={form.control}
+                      name="seniority"
+                      label="Seniority level"
+                      type="select"
+                      options={["Executive", "Senior", "Mid-level", "Junior"]}
+                  />
+
+                  {/* ─── Department (select) ──────────────────────────── */}
+                  <FormField
+                      control={form.control}
+                      name="department"
+                      label="Department"
+                      type="select"
+                      options={[
+                        "Technology",
+                        "Product",
+                        "HR",
+                        "Finance",
+                        "Operations",
+                        "Marketing",
+                      ]}
+                  />
+
+                  {/* ─── Location (free text) ────────────────────────── */}
+                  <FormField
+                      control={form.control}
+                      name="location"
+                      label="Location"
+                      placeholder="e.g. Dubai"
+                      type="text"
+                  />
+                </>
+            )}
 
             <Button className="btn" type="submit">
               {isSignIn ? "Sign In" : "Create an Account"}

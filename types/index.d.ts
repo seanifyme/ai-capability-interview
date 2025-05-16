@@ -1,8 +1,27 @@
+/* ──────────────────────────────────────────────────────────────
+   Global type declarations
+   ──────────────────────────────────────────────────────────── */
+
+/* Profiling enums */
+type Seniority = "Executive" | "Senior" | "Mid-level" | "Junior";
+
+type Department =
+    | "Technology"
+    | "Product"
+    | "HR"
+    | "Finance"
+    | "Operations"
+    | "Marketing";
+
+/* ──────────────────────────────────────────────────────────────
+   AI-readiness / interview types
+   ──────────────────────────────────────────────────────────── */
+
 interface Feedback {
   id?: string;
   interviewId: string;
-  userId?: string; // optional since not always needed
-  totalScore?: number; // some interviews may not have it
+  userId?: string;                // optional since not always needed
+  totalScore?: number;            // some interviews may not have it
   benchmark?: string;
   recommendations?: string[];
   categoryScores?: Array<{
@@ -27,14 +46,13 @@ interface Interview {
   type: string;
   finalized: boolean;
 
-  // 🔥 AI Readiness Audit Fields
+  /* 🔥 AI Readiness Audit Fields */
   readinessScore?: number;
   benchmarkSummary?: string;
   recommendations?: string[];
   strengths?: string[];
   weaknesses?: string[];
 }
-
 
 interface CreateFeedbackParams {
   interviewId: string;
@@ -43,11 +61,43 @@ interface CreateFeedbackParams {
   feedbackId?: string;
 }
 
-interface User {
+/* ──────────────────────────────────────────────────────────────
+   Auth-related types
+   ──────────────────────────────────────────────────────────── */
+
+interface SignInParams {
+  email: string;
+  idToken: string;
+}
+
+interface SignUpParams {
+  uid: string;
   name: string;
   email: string;
-  id: string;
+  password: string;
+
+  /* Optional profiling fields collected at sign-up */
+  jobTitle?: string;
+  seniority?: Seniority;
+  department?: Department;
+  location?: string;
 }
+
+/* User object returned by getCurrentUser() */
+interface User {
+  id: string;
+  name: string;
+  email: string;
+
+  jobTitle?: string | null;
+  seniority?: Seniority | null;
+  department?: Department | null;
+  location?: string | null;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   UI / component props
+   ──────────────────────────────────────────────────────────── */
 
 interface InterviewCardProps {
   interviewId?: string;
@@ -80,18 +130,6 @@ interface GetFeedbackByInterviewIdParams {
 interface GetLatestInterviewsParams {
   userId: string;
   limit?: number;
-}
-
-interface SignInParams {
-  email: string;
-  idToken: string;
-}
-
-interface SignUpParams {
-  uid: string;
-  name: string;
-  email: string;
-  password: string;
 }
 
 type FormType = "sign-in" | "sign-up";
