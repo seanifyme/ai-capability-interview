@@ -122,7 +122,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
 
   /* ─── render ─────────────────────────────────────────────── */
   return (
-      <div className="card-border lg:min-w-[566px]">
+      <div className="card-border w-full max-w-md">
         <div className="card flex flex-col gap-6 py-14 px-10">
           {/* Brand */}
           <div className="flex items-center justify-center gap-2">
