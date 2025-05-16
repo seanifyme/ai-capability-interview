@@ -4,9 +4,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { toast } from "sonner";
 
 import { auth } from "@/firebase/client";
@@ -22,20 +22,35 @@ import { signIn, signUp } from "@/lib/actions/auth.action";
 
 /* ─── dropdown options (keep in sync with types/index.d.ts) ─── */
 const SENIORITY = ["Executive", "Senior", "Mid-level", "Junior"] as const;
-const DEPT      = ["Technology", "Product", "HR", "Finance", "Operations", "Marketing"] as const;
-const EMIRATE   = ["Abu Dhabi","Dubai","Sharjah","Ajman","Umm Al Quwain","Ras Al Khaimah","Fujairah"] as const;
+const DEPT = [
+  "Technology",
+  "Product",
+  "HR",
+  "Finance",
+  "Operations",
+  "Marketing",
+] as const;
+const EMIRATE = [
+  "Abu Dhabi",
+  "Dubai",
+  "Sharjah",
+  "Ajman",
+  "Umm Al Quwain",
+  "Ras Al Khaimah",
+  "Fujairah",
+] as const;
 
-/* ─── zod schema (dynamic based on form type) ───────────────── */
+/* ─── zod schema (dynamic) ──────────────────────────────────── */
 const authFormSchema = (formType: FormType) =>
     z.object({
-      name:      formType === "sign-up" ? z.string().min(3) : z.string().optional(),
-      email:     z.string().email(),
-      password:  z.string().min(3),
+      name: formType === "sign-up" ? z.string().min(3) : z.string().optional(),
+      email: z.string().email(),
+      password: z.string().min(3),
 
-      jobTitle:  z.string().optional(),
+      jobTitle: z.string().optional(),
       seniority: z.enum(SENIORITY).optional(),
-      department:z.enum(DEPT).optional(),
-      location:  z.enum(EMIRATE).optional(),
+      department: z.enum(DEPT).optional(),
+      location: z.enum(EMIRATE).optional(),
     });
 
 /* ─── component ─────────────────────────────────────────────── */
@@ -55,8 +70,10 @@ const AuthForm = ({ type }: { type: FormType }) => {
     },
   });
 
-  /* submit handler (same functionality) */
-  const onSubmit = async (data: z.infer<ReturnType<typeof authFormSchema>>) => {
+  /* ─ submit handler ─ */
+  const onSubmit = async (
+      data: z.infer<ReturnType<typeof authFormSchema>>,
+  ) => {
     try {
       if (type === "sign-up") {
         const {
@@ -122,8 +139,8 @@ const AuthForm = ({ type }: { type: FormType }) => {
 
   /* ─── render ─────────────────────────────────────────────── */
   return (
-      <div className="card-border w-full max-w-md">
-        <div className="card flex flex-col gap-6 py-14 px-10">
+      <div className="card-border w-full max-w-2xl">
+        <div className="card flex flex-col gap-6 py-12 px-8">
           {/* Brand */}
           <div className="flex items-center justify-center gap-2">
             <Image src="/logo.svg" alt="logo" width={38} height={32} />
@@ -135,41 +152,47 @@ const AuthForm = ({ type }: { type: FormType }) => {
           <Form {...form}>
             <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="w-full space-y-4 mt-4 form"
+                className="w-full grid md:grid-cols-2 gap-6"
             >
-              {/* Core fields */}
+              {/* Core fields (span 2 columns) */}
               {!isSignIn && (
-                  <FormField
-                      control={form.control}
-                      name="name"
-                      label="Name"
-                      placeholder="Your name"
-                      type="text"
-                      compact
-                  />
+                  <div className="col-span-2">
+                    <FormField
+                        control={form.control}
+                        name="name"
+                        label="Name"
+                        placeholder="Your name"
+                        type="text"
+                        compact
+                    />
+                  </div>
               )}
 
-              <FormField
-                  control={form.control}
-                  name="email"
-                  label="Email"
-                  placeholder="you@email.com"
-                  type="email"
-                  compact
-              />
+              <div className="col-span-2">
+                <FormField
+                    control={form.control}
+                    name="email"
+                    label="Email"
+                    placeholder="you@email.com"
+                    type="email"
+                    compact
+                />
+              </div>
 
-              <FormField
-                  control={form.control}
-                  name="password"
-                  label="Password"
-                  placeholder="••••••••"
-                  type="password"
-                  compact
-              />
+              <div className="col-span-2">
+                <FormField
+                    control={form.control}
+                    name="password"
+                    label="Password"
+                    placeholder="••••••••"
+                    type="password"
+                    compact
+                />
+              </div>
 
-              {/* Profiling fields (sign-up only) */}
+              {/* Profiling fields (each takes one column) */}
               {!isSignIn && (
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <>
                     <FormField
                         control={form.control}
                         name="jobTitle"
@@ -202,12 +225,15 @@ const AuthForm = ({ type }: { type: FormType }) => {
                         options={Array.from(EMIRATE)}
                         compact
                     />
-                  </div>
+                  </>
               )}
 
-              <Button className="btn w-full" type="submit">
-                {isSignIn ? "Sign In" : "Create an Account"}
-              </Button>
+              {/* Submit button full width */}
+              <div className="col-span-2">
+                <Button className="btn w-full" type="submit">
+                  {isSignIn ? "Sign In" : "Create an Account"}
+                </Button>
+              </div>
             </form>
           </Form>
 
