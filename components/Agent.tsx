@@ -11,7 +11,10 @@ export interface AgentProps {
   userName: string;
   userId: string;
   interviewId: string;
-  questions?: string[];           // still accepted for page.tsx (not used now)
+  jobTitle: string;
+  department: string;
+  seniority: string;
+  location: string;           // still accepted for page.tsx (not used now)
 }
 
 /* ---------- local enums ---------- */
@@ -30,7 +33,16 @@ interface SavedMessage {
 /* ================================================================ */
 /*                            COMPONENT                             */
 /* ================================================================ */
-const Agent = ({ userName, userId, interviewId }: AgentProps) => {
+const Agent = ({
+                 userName,
+                 userId,
+                 interviewId,
+                 jobTitle,
+                 department,
+                 seniority,
+                 location
+               }: AgentProps) => {
+
   const router = useRouter();
 
   const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
@@ -89,7 +101,14 @@ const Agent = ({ userName, userId, interviewId }: AgentProps) => {
 
     try {
       await vapi.start(assistantId, {
-        variableValues: { userId, userName },
+        variableValues: {
+          userId,
+          userName,
+          "user.jobTitle": jobTitle,
+          "user.department": department,
+          "user.seniority": seniority,
+          "user.location": location,
+        },
       });
     } catch (e) {
       console.error(e);

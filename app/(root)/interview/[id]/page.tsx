@@ -42,11 +42,15 @@ const InterviewDetails = async ({ params }: RouteParams) => {
         </div>
 
         {/* voice agent */}
-        <Agent
-            userName={user?.name || "Guest"}
-            userId={user?.id || "anonymous"}
-            interviewId={id}
-        />
+          <Agent
+              userName={user?.name || "Guest"}
+              userId={user?.id || "anonymous"}
+              interviewId={id}
+              jobTitle={user?.jobTitle || ""}
+              department={user?.department || ""}
+              seniority={user?.seniority || ""}
+              location={user?.location || ""}
+          />
       </>
   );
 };

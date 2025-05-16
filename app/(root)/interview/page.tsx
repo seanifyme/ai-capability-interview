@@ -33,7 +33,12 @@ const Page = async () => {
                 userName={user.name}
                 userId={user.id}
                 interviewId={interviewId}
+                jobTitle={user.jobTitle || ""}
+                department={user.department || ""}
+                seniority={user.seniority || ""}
+                location={user.location || ""}
             />
+
         </>
     );
 };
