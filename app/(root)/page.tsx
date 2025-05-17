@@ -3,6 +3,7 @@ import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import InterviewCard from "@/components/InterviewCard";
+import ExportTrainingData from "@/components/ExportTrainingData";
 
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import { getInterviewsByUserId } from "@/lib/actions/general.action";
@@ -15,6 +16,9 @@ async function Home() {
 
   const userInterviews = (await getInterviewsByUserId(user.id)) || [];
   const hasPastInterviews = userInterviews.length > 0;
+  
+  // Check if user is an admin based on email
+  const isAdmin = user.email === process.env.ADMIN_EMAIL;
 
 
   return (
@@ -61,8 +65,17 @@ async function Home() {
           )}
         </div>
       </section>
-
-
+      
+      {/* Admin Tools Section - Only visible to admins */}
+      {isAdmin && (
+        <section className="flex flex-col gap-6 mt-8">
+          <h2>Admin Tools</h2>
+          <div className="flex flex-wrap gap-4">
+            <ExportTrainingData />
+            {/* Add other admin tools here in the future */}
+          </div>
+        </section>
+      )}
     </>
   );
 }
