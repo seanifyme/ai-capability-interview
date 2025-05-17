@@ -75,11 +75,13 @@ const InterviewCard = async ({
                 </div>
 
                 <div className="flex flex-row justify-between">
-                    <Button className="btn-primary">
-                        <Link href={`/interview/${interviewId}/feedback`}>
-                            View Report
-                        </Link>
-                    </Button>
+                    {interview?.finalized && (
+                        <Button className="btn-primary">
+                            <Link href={`/interview/${interviewId}/feedback`}>
+                                View Report
+                            </Link>
+                        </Button>
+                    )}
                 </div>
             </div>
         </div>

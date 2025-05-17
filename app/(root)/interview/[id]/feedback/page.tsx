@@ -31,6 +31,11 @@ const Feedback = async ({ params }: RouteParams) => {
 
     const interviewRaw = await getInterviewById(id);
     if (!interviewRaw) redirect("/");
+    
+    // Prevent access to unfinished interview feedback
+    if (!interviewRaw.finalized) {
+        redirect("/");
+    }
 
     const feedbackRaw = await getFeedbackByInterviewId({
         interviewId: id,
