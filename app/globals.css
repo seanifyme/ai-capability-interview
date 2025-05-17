@@ -191,7 +191,7 @@
   }
 
   .card {
-    @apply bg-[#041338] rounded-2xl;
+    @apply bg-[#041338] rounded-2xl min-h-0;
   }
 
   .form {
@@ -261,7 +261,7 @@
   }
 
   .auth-layout {
-    @apply min-h-screen flex items-center justify-center p-4;
+    @apply min-h-screen flex items-center justify-center p-6;
     
     background: radial-gradient(
       circle at center,
