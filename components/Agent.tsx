@@ -83,7 +83,7 @@ const Agent = ({
       setLastMessage(messages[messages.length - 1].content);
     }
     if (callStatus === CallStatus.FINISHED) {
-      router.push(`/interview/${interviewId}/feedback`);
+      router.push('/');
     }
   }, [messages, callStatus, interviewId, router]);
 
