@@ -152,7 +152,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
           <Form {...form}>
             <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="w-full grid md:grid-cols-2 gap-6"
+                className="w-full grid md:grid-cols-2 gap-8"
             >
               {/* Core fields (span 2 columns) */}
               {!isSignIn && (
@@ -188,48 +188,57 @@ const AuthForm = ({ type }: { type: FormType }) => {
                     type="password"
                     compact
                 />
+                <p className="text-xs text-gray-500 mt-1">Password must be at least 3 characters long</p>
               </div>
 
               {/* Profiling fields (each takes one column) */}
               {!isSignIn && (
                   <>
-                    <FormField
-                        control={form.control}
-                        name="jobTitle"
-                        label="Job Title"
-                        placeholder="e.g. CTO"
-                        type="text"
-                        compact
-                    />
-                    <FormField
-                        control={form.control}
-                        name="seniority"
-                        label="Seniority"
-                        type="select"
-                        options={Array.from(SENIORITY)}
-                        compact
-                    />
-                    <FormField
-                        control={form.control}
-                        name="department"
-                        label="Department"
-                        type="select"
-                        options={Array.from(DEPT)}
-                        compact
-                    />
-                    <FormField
-                        control={form.control}
-                        name="location"
-                        label="Location"
-                        type="select"
-                        options={Array.from(EMIRATE)}
-                        compact
-                    />
+                    <div className="space-y-1">
+                      <FormField
+                          control={form.control}
+                          name="jobTitle"
+                          label="Job Title"
+                          placeholder="e.g. CTO"
+                          type="text"
+                          compact
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <FormField
+                          control={form.control}
+                          name="seniority"
+                          label="Seniority"
+                          type="select"
+                          options={Array.from(SENIORITY)}
+                          compact
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <FormField
+                          control={form.control}
+                          name="department"
+                          label="Department"
+                          type="select"
+                          options={Array.from(DEPT)}
+                          compact
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <FormField
+                          control={form.control}
+                          name="location"
+                          label="Location"
+                          type="select"
+                          options={Array.from(EMIRATE)}
+                          compact
+                      />
+                    </div>
                   </>
               )}
 
               {/* Submit button full width */}
-              <div className="col-span-2">
+              <div className="col-span-2 mt-4">
                 <Button className="btn w-full bg-[#007FF4] hover:bg-[#0069CF] text-white cursor-pointer" type="submit">
                   {isSignIn ? "Sign In" : "Create an Account"}
                 </Button>
@@ -238,11 +247,11 @@ const AuthForm = ({ type }: { type: FormType }) => {
           </Form>
 
           {/* Switch link */}
-          <p className="text-center text-sm">
+          <p className="text-center text-sm mt-6">
             {isSignIn ? "No account yet?" : "Have an account already?"}
             <Link
                 href={isSignIn ? "/sign-up" : "/sign-in"}
-                className="font-bold text-user-primary ml-1"
+                className="font-bold text-[#007FF4] hover:text-[#0069CF] ml-2"
             >
               {isSignIn ? "Sign Up" : "Sign In"}
             </Link>
