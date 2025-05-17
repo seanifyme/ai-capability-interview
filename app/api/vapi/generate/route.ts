@@ -1,12 +1,12 @@
 import { generateText } from "ai";
 import { google } from "@ai-sdk/google";
 import { db } from "@/firebase/admin";
-import { getRandomInterviewCover } from "@/lib/utils";
+import { getRandomInterviewCover, formatInterviewForTraining } from "@/lib/utils";
 
 export async function POST(request: Request) {
     try {
         /* ─────────────────────────────────────────
-           1. Parse the JSON body coming from Vapi’s
+           1. Parse the JSON body coming from Vapi's
               storeInterviewExtended function tool
         ───────────────────────────────────────── */
         const body = await request.json();
@@ -29,7 +29,8 @@ export async function POST(request: Request) {
             aiExposure,
             aiOpportunities,
             changeAppetite,
-            blockers
+            blockers,
+            messages
         } = body;
 
         /* ─────────────────────────────────────────
@@ -44,7 +45,8 @@ export async function POST(request: Request) {
             painPoints,
             currentTools,
             aiExposure,
-            changeAppetite
+            changeAppetite,
+            messages
         };
 
         for (const [key, value] of Object.entries(required)) {
@@ -161,11 +163,26 @@ Return **only** JSON of the form:
             finalized: true,
             coverImage: getRandomInterviewCover(),
             createdAt: new Date().toISOString(),
-            type: "AI Readiness"
+            type: "AI Readiness",
+            messages,
+            trainingData: formatInterviewForTraining({
+                role,
+                type: "AI Readiness",
+                messages,
+                readinessScore,
+                benchmarkSummary,
+                recommendations,
+                strengths,
+                weaknesses,
+                department,
+                seniority: body.seniority,
+                jobTitle: body.jobTitle,
+                createdAt: new Date().toISOString()
+            })
         };
 
         await db.collection("interviews").add(interviewDoc);
-        console.log("✅ Interview saved to Firestore");
+        console.log("✅ Interview saved to Firestore with training data");
 
         return Response.json({ success: true }, { status: 200 });
     } catch (error) {

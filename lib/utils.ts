@@ -45,3 +45,30 @@ export const getRandomInterviewCover = () => {
   const randomIndex = Math.floor(Math.random() * interviewCovers.length);
   return `/covers${interviewCovers[randomIndex]}`;
 };
+
+// Format interview data for LLM training
+export function formatInterviewForTraining(interview: any) {
+  // Extract relevant fields for training
+  const trainingData = {
+    role: interview.role,
+    type: interview.type,
+    transcript: interview.messages?.map((m: any) => ({
+      role: m.role,
+      content: m.content
+    })),
+    readinessScore: interview.readinessScore,
+    benchmarkSummary: interview.benchmarkSummary,
+    recommendations: interview.recommendations,
+    strengths: interview.strengths,
+    weaknesses: interview.weaknesses,
+    metadata: {
+      department: interview.department,
+      seniority: interview.seniority,
+      jobTitle: interview.jobTitle,
+      createdAt: interview.createdAt
+    }
+  };
+  
+  // Convert to JSONL format (one JSON object per line)
+  return JSON.stringify(trainingData);
+}
