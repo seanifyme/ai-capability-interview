@@ -21,13 +21,13 @@ async function Home() {
     <>
       <section className="card-cta">
         <div className="flex flex-col gap-6 max-w-lg">
-          <h2>Discover Where AI Agents Can Transform Your Team</h2>
+          <h2>Expose Hidden Inefficiencies. Surface Agent-Ready Use Cases.</h2>
           <p className="text-lg">
-            Identify bottlenecks, map inefficiencies, and get tailored AI use cases.
+            Deploy AI voice agents across your team to uncover blind spots and generate a tactical AI roadmap in 24 hours.
           </p>
 
           <Button asChild className="btn-primary max-sm:w-full">
-            <Link href="/interview">Start an AI Readiness Interview</Link>
+            <Link href="/interview">Start Your AI Readiness Audit</Link>
           </Button>
         </div>
 
