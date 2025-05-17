@@ -140,19 +140,19 @@ const AuthForm = ({ type }: { type: FormType }) => {
   /* ─── render ─────────────────────────────────────────────── */
   return (
       <div className="card-border max-w-xl mx-auto">
-        <div className="card flex flex-col gap-4 py-6 px-8">
+        <div className="card flex flex-col gap-5 py-8 px-8">
           {/* Brand */}
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-2 mb-2">
             <Image src="/logo.svg" alt="logo" width={32} height={28} />
             <h2 className="text-primary-100">SingularShift</h2>
           </div>
 
-          <h3 className="text-xl text-center">Discover Where AI Agents Can Transform Your Organisation — in 24 Hours</h3>
+          <h3 className="text-xl text-center mb-2">Discover Where AI Agents Can Transform Your Organisation — in 24 Hours</h3>
 
           <Form {...form}>
             <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="w-full grid md:grid-cols-2 gap-4"
+                className="w-full grid md:grid-cols-2 gap-5"
             >
               {/* Core fields (span 2 columns) */}
               {!isSignIn && (
@@ -185,9 +185,9 @@ const AuthForm = ({ type }: { type: FormType }) => {
                     placeholder="••••••••"
                     type="password"
                 />
-                <div className="mt-1.5 space-y-1">
-                  <p className="text-xs text-white/60">Password requirements:</p>
-                  <ul className="text-xs text-white/60 list-disc list-inside space-y-0.5">
+                <div className="mt-2 space-y-1.5 bg-white/5 p-3 rounded-lg">
+                  <p className="text-xs text-white/70 font-medium">Password requirements:</p>
+                  <ul className="text-xs text-white/60 list-disc list-inside space-y-1">
                     <li>At least 3 characters long</li>
                     <li>Mix of letters and numbers recommended</li>
                     <li>Special characters make it stronger</li>
@@ -238,7 +238,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
               )}
 
               {/* Submit button full width */}
-              <div className="col-span-2">
+              <div className="col-span-2 mt-2">
                 <Button className="btn w-full bg-[#007FF4] hover:bg-[#0069CF] text-white cursor-pointer rounded-lg py-2.5" type="submit">
                   {isSignIn ? "Sign In" : "Create an Account"}
                 </Button>
@@ -247,7 +247,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
           </Form>
 
           {/* Switch link */}
-          <p className="text-center text-sm">
+          <p className="text-center text-sm mt-2">
             {isSignIn ? "No account yet?" : "Have an account already?"}
             <Link
                 href={isSignIn ? "/sign-up" : "/sign-in"}

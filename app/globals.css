@@ -187,11 +187,11 @@
 
   .card-border {
     @apply border-gradient rounded-2xl overflow-hidden;
-    box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.3);
   }
 
   .card {
-    @apply bg-[#040D30] rounded-2xl;
+    @apply bg-[#041338] rounded-2xl;
   }
 
   .form {
@@ -265,8 +265,8 @@
     
     background: radial-gradient(
       circle at center,
-      rgba(0, 13, 48, 0.5) 0%,
-      rgba(0, 13, 48, 0.8) 100%
+      rgba(0, 13, 48, 0.3) 0%,
+      rgba(0, 13, 48, 0.95) 100%
     );
   }
 
