@@ -47,43 +47,27 @@ export const getRandomInterviewCover = () => {
 };
 
 // Format interview data for LLM training
-export function formatInterviewForTraining(interview: any) {
-  // Format the conversation transcript into a coherent prompt
-  const prompt = `Role: ${interview.role}
-Department: ${interview.department}
-Type: ${interview.type}
+export function formatInterviewForTraining(interview: any): { prompt: string; response: string }[] {
+  const lines: { prompt: string; response: string }[] = [];
 
-Conversation:
-${interview.messages?.map((m: any) => `${m.role}: ${m.content}`).join('\n')}`;
+  const messages = interview.messages || [];
 
-  // Format the completion (the AI's analysis)
-  const completion = `Readiness Score: ${interview.readinessScore}
+  for (let i = 0; i < messages.length - 1; i++) {
+    const current = messages[i];
+    const next = messages[i + 1];
 
-Benchmark Summary:
-${interview.benchmarkSummary}
+    if (current.role === "user" && next.role === "assistant") {
+      lines.push({
+        prompt: current.content.trim(),
+        response: next.content.trim()
+      });
+    }
+  }
 
-Key Recommendations:
-${interview.recommendations?.join('\n')}
-
-Strengths:
-${interview.strengths?.join('\n')}
-
-Weaknesses:
-${interview.weaknesses?.join('\n')}`;
-
-  // Return the prompt-completion pair
-  return {
-    prompt,
-    completion
-  };
+  return lines;
 }
 
 // Convert training data to JSONL format for Replicate
-export function convertToJSONL(interviews: any[]) {
-  return interviews
-    .map(interview => JSON.stringify({
-      prompt: interview.trainingData.prompt,
-      completion: interview.trainingData.completion
-    }))
-    .join('\n');
+export function convertToJSONL(trainingData: { prompt: string; response: string }[]) {
+  return trainingData.map(pair => JSON.stringify(pair)).join('\n');
 }
