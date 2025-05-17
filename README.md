@@ -19,7 +19,7 @@
     </div>
 </div>
 
-## 📋 <a name="table">Table of Contents</a>
+# 📋 <a name="table">Table of Contents</a>
 
 1. 🤖 [Introduction](#introduction)
 2. ⚙️ [Tech Stack](#tech-stack)
@@ -28,6 +28,7 @@
 5. 🕸️ [Snippets (Code to Copy)](#snippets)
 6. 🔗 [Assets](#links)
 7. 🚀 [More](#more)
+8. 🔮 [Project Vision](#vision)
 
 ## 🚨 Tutorial
 
@@ -719,3 +720,17 @@ detailed explanations, cool features, and exercises to boost your skills. Give i
 <a href="https://jsmastery.pro/next15" target="_blank">
    <img src="https://github.com/user-attachments/assets/b8760e69-1f81-4a71-9108-ceeb1de36741" alt="Project Banner">
 </a>
+
+## <a name="vision">🔮 Project Vision</a>
+
+SingularShift is an AI-Readiness Infrastructure for the UAE. Our platform deploys AI-powered voice agents that interview entire teams to uncover hidden inefficiencies and surface agent-ready use cases.
+
+**For more detailed information about our project vision, business model, and market positioning, please see our [Vision Document](./docs/VISION.md).**
+
+Key points:
+- We deliver strategic clarity in 24 hours, not months
+- We expose AI-ready use cases through voice-agent interviews
+- We build a "digital twin" of organizational AI readiness
+- We're creating the Stripe for AI agent adoption
+
+The documentation in the `docs/` directory provides essential context about what we're building and why, helping to align development efforts with the overall vision.
