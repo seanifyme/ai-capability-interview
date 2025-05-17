@@ -3,7 +3,6 @@ import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import InterviewCard from "@/components/InterviewCard";
-import ExportTrainingData from "@/components/ExportTrainingData";
 
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import { getInterviewsByUserId } from "@/lib/actions/general.action";
@@ -30,9 +29,17 @@ async function Home() {
             Deploy AI voice agents across your team to uncover blind spots and generate a tactical AI roadmap in 24 hours.
           </p>
 
-          <Button asChild className="btn-primary max-sm:w-full">
-            <Link href="/interview">Start Your AI Readiness Audit</Link>
-          </Button>
+          <div className="flex gap-4 flex-wrap">
+            <Button asChild className="btn-primary">
+              <Link href="/interview">Start Your AI Readiness Audit</Link>
+            </Button>
+            
+            {isAdmin && (
+              <Button asChild className="btn-secondary">
+                <Link href="/admin/dashboard">Admin Dashboard</Link>
+              </Button>
+            )}
+          </div>
         </div>
 
         <Image
@@ -65,17 +72,6 @@ async function Home() {
           )}
         </div>
       </section>
-      
-      {/* Admin Tools Section - Only visible to admins */}
-      {isAdmin && (
-        <section className="flex flex-col gap-6 mt-8">
-          <h2>Admin Tools</h2>
-          <div className="flex flex-wrap gap-4">
-            <ExportTrainingData />
-            {/* Add other admin tools here in the future */}
-          </div>
-        </section>
-      )}
     </>
   );
 }
