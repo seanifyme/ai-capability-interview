@@ -26,7 +26,7 @@ export default function LogoutButton() {
     <Button 
       onClick={handleLogout} 
       disabled={isLoading}
-      className="text-light-100 hover:text-primary-200 bg-transparent hover:bg-transparent"
+      className="text-light-100 hover:text-primary-200 bg-transparent hover:bg-transparent cursor-pointer"
     >
       {isLoading ? "Logging out..." : "Logout"}
     </Button>
