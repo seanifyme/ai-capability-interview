@@ -4,6 +4,7 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import { isAdmin } from "@/lib/auth-utils";
+import LogoutButton from "@/components/LogoutButton";
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   // Add authentication check
@@ -30,7 +31,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           </div>
         </div>
         <nav>
-          <ul className="flex gap-6">
+          <ul className="flex gap-6 items-center">
             <li>
               <Link href="/" className="text-light-100 hover:text-primary-200">
                 User Dashboard
@@ -40,6 +41,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
               <Link href="/admin/dashboard" className="text-light-100 hover:text-primary-200">
                 Admin Dashboard
               </Link>
+            </li>
+            <li>
+              <LogoutButton />
             </li>
           </ul>
         </nav>
