@@ -27,7 +27,7 @@ const InterviewCard = async ({
 
     const formattedDate = dayjs(
         interview?.createdAt || createdAt || Date.now()
-    ).format("MMM D, YYYY");
+    ).format("MMM D, YYYY h:mm A");
 
     return (
         <div className="card-border w-[360px] max-sm:w-full min-h-96">
