@@ -140,19 +140,19 @@ const AuthForm = ({ type }: { type: FormType }) => {
   /* ─── render ─────────────────────────────────────────────── */
   return (
       <div className="card-border w-full max-w-xl">
-        <div className="card flex flex-col gap-6 py-12 px-8">
+        <div className="card flex flex-col gap-4 py-8 px-8">
           {/* Brand */}
-          <div className="flex items-center justify-center gap-2">
-            <Image src="/logo.svg" alt="logo" width={38} height={32} />
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Image src="/logo.svg" alt="logo" width={32} height={28} />
             <h2 className="text-primary-100">SingularShift</h2>
           </div>
 
-          <h3>Discover AI-agent opportunities inside your organisation</h3>
+          <h3 className="text-xl mb-2">Discover AI-agent opportunities inside your organisation</h3>
 
           <Form {...form}>
             <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="w-full grid md:grid-cols-2 gap-8"
+                className="w-full grid md:grid-cols-2 gap-4"
             >
               {/* Core fields (span 2 columns) */}
               {!isSignIn && (
@@ -188,13 +188,13 @@ const AuthForm = ({ type }: { type: FormType }) => {
                     type="password"
                     compact
                 />
-                <p className="text-xs text-gray-500 mt-1">Password must be at least 3 characters long</p>
+                <p className="text-xs text-gray-500 mt-0.5">Password must be at least 3 characters long</p>
               </div>
 
               {/* Profiling fields (each takes one column) */}
               {!isSignIn && (
                   <>
-                    <div className="space-y-1">
+                    <div>
                       <FormField
                           control={form.control}
                           name="jobTitle"
@@ -204,7 +204,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
                           compact
                       />
                     </div>
-                    <div className="space-y-1">
+                    <div>
                       <FormField
                           control={form.control}
                           name="seniority"
@@ -214,7 +214,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
                           compact
                       />
                     </div>
-                    <div className="space-y-1">
+                    <div>
                       <FormField
                           control={form.control}
                           name="department"
@@ -224,7 +224,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
                           compact
                       />
                     </div>
-                    <div className="space-y-1">
+                    <div>
                       <FormField
                           control={form.control}
                           name="location"
@@ -238,7 +238,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
               )}
 
               {/* Submit button full width */}
-              <div className="col-span-2 mt-4">
+              <div className="col-span-2 mt-2">
                 <Button className="btn w-full bg-[#007FF4] hover:bg-[#0069CF] text-white cursor-pointer" type="submit">
                   {isSignIn ? "Sign In" : "Create an Account"}
                 </Button>
@@ -247,7 +247,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
           </Form>
 
           {/* Switch link */}
-          <p className="text-center text-sm mt-6">
+          <p className="text-center text-sm mt-4">
             {isSignIn ? "No account yet?" : "Have an account already?"}
             <Link
                 href={isSignIn ? "/sign-up" : "/sign-in"}
