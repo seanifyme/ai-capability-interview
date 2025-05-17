@@ -147,7 +147,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
             <h2 className="text-primary-100">SingularShift</h2>
           </div>
 
-          <h3 className="text-xl mb-2">Discover AI-agent opportunities inside your organisation</h3>
+          <h3 className="text-xl mb-2">Discover Where AI Agents Can Transform Your Organisation — in 24 Hours</h3>
 
           <Form {...form}>
             <form
