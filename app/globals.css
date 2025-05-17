@@ -186,11 +186,12 @@
   }
 
   .card-border {
-    @apply border-gradient p-0 rounded-2xl w-fit;
+    @apply border-gradient rounded-2xl overflow-hidden;
+    box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.3);
   }
 
   .card {
-    @apply !bg-[#040D30] rounded-2xl min-h-full;
+    @apply bg-[#040D30] rounded-2xl;
   }
 
   .form {
@@ -260,7 +261,13 @@
   }
 
   .auth-layout {
-    @apply flex items-center justify-center mx-auto max-w-7xl min-h-screen max-sm:px-4 max-sm:py-8;
+    @apply min-h-screen flex items-center justify-center p-4;
+    
+    background: radial-gradient(
+      circle at center,
+      rgba(0, 13, 48, 0.5) 0%,
+      rgba(0, 13, 48, 0.8) 100%
+    );
   }
 
   .root-layout {
