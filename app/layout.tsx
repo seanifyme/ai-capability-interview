@@ -12,6 +12,16 @@ const monaSans = Mona_Sans({
 export const metadata: Metadata = {
   title: "SingularShift",
   description: "Mapping AI-agent opportunities in your organisation",
+  icons: {
+    icon: [
+      {
+        url: "/logo.png",
+        type: "image/png",
+      },
+    ],
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({
