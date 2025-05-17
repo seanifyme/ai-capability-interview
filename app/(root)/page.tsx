@@ -6,7 +6,7 @@ import InterviewCard from "@/components/InterviewCard";
 
 import { getCurrentUser } from "@/lib/actions/auth.action";
 import { getInterviewsByUserId } from "@/lib/actions/general.action";
-
+import { isAdmin } from "@/lib/auth-utils";
 
 async function Home() {
   const user = await getCurrentUser();
@@ -16,9 +16,8 @@ async function Home() {
   const userInterviews = (await getInterviewsByUserId(user.id)) || [];
   const hasPastInterviews = userInterviews.length > 0;
   
-  // Check if user is an admin based on email
-  const isAdmin = user.email === process.env.ADMIN_EMAIL;
-
+  // Check if user is an admin
+  const userIsAdmin = isAdmin(user.email);
 
   return (
     <>
@@ -34,7 +33,7 @@ async function Home() {
               <Link href="/interview">Start Your AI Readiness Audit</Link>
             </Button>
             
-            {isAdmin && (
+            {userIsAdmin && (
               <Button asChild className="btn-secondary">
                 <Link href="/admin/dashboard">Admin Dashboard</Link>
               </Button>

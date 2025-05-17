@@ -3,11 +3,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/actions/auth.action";
+import { isAdmin } from "@/lib/auth-utils";
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   // Add authentication check
   const user = await getCurrentUser();
-  if (!user?.email || user.email !== process.env.ADMIN_EMAIL) {
+  
+  // Check if user is admin
+  if (!isAdmin(user?.email)) {
     redirect("/");
   }
   
