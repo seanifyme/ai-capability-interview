@@ -147,12 +147,12 @@ const AuthForm = ({ type }: { type: FormType }) => {
             <h2 className="text-primary-100">SingularShift</h2>
           </div>
 
-          <h3 className="text-xl mb-2">Discover Where AI Agents Can Transform Your Organisation — in 24 Hours</h3>
+          <h3 className="text-xl mb-4 text-center">Discover Where AI Agents Can Transform Your Organisation — in 24 Hours</h3>
 
           <Form {...form}>
             <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="w-full grid md:grid-cols-2 gap-4"
+                className="w-full grid md:grid-cols-2 gap-5"
             >
               {/* Core fields (span 2 columns) */}
               {!isSignIn && (
@@ -163,7 +163,6 @@ const AuthForm = ({ type }: { type: FormType }) => {
                         label="Name"
                         placeholder="Your name"
                         type="text"
-                        compact
                     />
                   </div>
               )}
@@ -175,7 +174,6 @@ const AuthForm = ({ type }: { type: FormType }) => {
                     label="Email"
                     placeholder="you@email.com"
                     type="email"
-                    compact
                 />
               </div>
 
@@ -186,9 +184,15 @@ const AuthForm = ({ type }: { type: FormType }) => {
                     label="Password"
                     placeholder="••••••••"
                     type="password"
-                    compact
                 />
-                <p className="text-xs text-gray-500 mt-0.5">Password must be at least 3 characters long</p>
+                <div className="mt-1.5 space-y-1">
+                  <p className="text-xs text-white/60">Password requirements:</p>
+                  <ul className="text-xs text-white/60 list-disc list-inside space-y-0.5">
+                    <li>At least 3 characters long</li>
+                    <li>Mix of letters and numbers recommended</li>
+                    <li>Special characters make it stronger</li>
+                  </ul>
+                </div>
               </div>
 
               {/* Profiling fields (each takes one column) */}
@@ -201,7 +205,6 @@ const AuthForm = ({ type }: { type: FormType }) => {
                           label="Job Title"
                           placeholder="e.g. CTO"
                           type="text"
-                          compact
                       />
                     </div>
                     <div>
@@ -211,7 +214,6 @@ const AuthForm = ({ type }: { type: FormType }) => {
                           label="Seniority"
                           type="select"
                           options={Array.from(SENIORITY)}
-                          compact
                       />
                     </div>
                     <div>
@@ -221,7 +223,6 @@ const AuthForm = ({ type }: { type: FormType }) => {
                           label="Department"
                           type="select"
                           options={Array.from(DEPT)}
-                          compact
                       />
                     </div>
                     <div>
@@ -231,7 +232,6 @@ const AuthForm = ({ type }: { type: FormType }) => {
                           label="Location"
                           type="select"
                           options={Array.from(EMIRATE)}
-                          compact
                       />
                     </div>
                   </>
@@ -239,7 +239,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
 
               {/* Submit button full width */}
               <div className="col-span-2 mt-2">
-                <Button className="btn w-full bg-[#007FF4] hover:bg-[#0069CF] text-white cursor-pointer" type="submit">
+                <Button className="btn w-full bg-[#007FF4] hover:bg-[#0069CF] text-white cursor-pointer rounded-lg py-2.5" type="submit">
                   {isSignIn ? "Sign In" : "Create an Account"}
                 </Button>
               </div>
