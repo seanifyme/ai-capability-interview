@@ -48,27 +48,42 @@ export const getRandomInterviewCover = () => {
 
 // Format interview data for LLM training
 export function formatInterviewForTraining(interview: any) {
-  // Extract relevant fields for training
-  const trainingData = {
-    role: interview.role,
-    type: interview.type,
-    transcript: interview.messages?.map((m: any) => ({
-      role: m.role,
-      content: m.content
-    })),
-    readinessScore: interview.readinessScore,
-    benchmarkSummary: interview.benchmarkSummary,
-    recommendations: interview.recommendations,
-    strengths: interview.strengths,
-    weaknesses: interview.weaknesses,
-    metadata: {
-      department: interview.department,
-      seniority: interview.seniority,
-      jobTitle: interview.jobTitle,
-      createdAt: interview.createdAt
-    }
+  // Format the conversation transcript into a coherent prompt
+  const prompt = `Role: ${interview.role}
+Department: ${interview.department}
+Type: ${interview.type}
+
+Conversation:
+${interview.messages?.map((m: any) => `${m.role}: ${m.content}`).join('\n')}`;
+
+  // Format the completion (the AI's analysis)
+  const completion = `Readiness Score: ${interview.readinessScore}
+
+Benchmark Summary:
+${interview.benchmarkSummary}
+
+Key Recommendations:
+${interview.recommendations?.join('\n')}
+
+Strengths:
+${interview.strengths?.join('\n')}
+
+Weaknesses:
+${interview.weaknesses?.join('\n')}`;
+
+  // Return the prompt-completion pair
+  return {
+    prompt,
+    completion
   };
-  
-  // Convert to JSONL format (one JSON object per line)
-  return JSON.stringify(trainingData);
+}
+
+// Convert training data to JSONL format for Replicate
+export function convertToJSONL(interviews: any[]) {
+  return interviews
+    .map(interview => JSON.stringify({
+      prompt: interview.trainingData.prompt,
+      completion: interview.trainingData.completion
+    }))
+    .join('\n');
 }
