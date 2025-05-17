@@ -197,15 +197,17 @@
     @apply w-full;
 
     .label {
-      @apply !text-light-100 !font-normal;
+      @apply !text-light-100 !font-normal text-sm mb-1;
     }
 
     .input {
-      @apply !bg-[#00204E] !rounded-full !min-h-12 !px-5 placeholder:!text-light-100;
+      @apply bg-transparent border border-white/60 rounded-md text-white placeholder:text-white/60;
+      @apply py-2 px-3 text-sm;
+      @apply focus:border-white/80 focus:ring-1 focus:ring-white/20;
     }
 
     .btn {
-      @apply !w-full !bg-[#007FF4] !text-white hover:!bg-[#007FF4]/80 !rounded-full !min-h-10 !font-bold !px-5 cursor-pointer;
+      @apply py-2.5 px-4 rounded-md transition-colors duration-150;
     }
   }
 

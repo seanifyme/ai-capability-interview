@@ -6,6 +6,7 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 interface FormFieldProps<T extends FieldValues> {
     control: Control<T>;
@@ -26,9 +27,11 @@ const FormField = <T extends FieldValues>({
                                               options = [],
                                               compact = false,
                                           }: FormFieldProps<T>) => {
-    const base = "input w-full border border-white/60";          // reuse existing Tailwind ‘input’ classes
-    const sm   = "py-2 px-3 text-sm";     // compact tweak
-    const cls  = compact ? `${base} ${sm}` : base;
+    const inputClasses = cn(
+        "w-full bg-transparent border border-white/60 rounded-md text-white placeholder:text-white/60",
+        "focus:border-white/80 focus:ring-1 focus:ring-white/20",
+        "py-2 px-3 text-sm"
+    );
 
     return (
         <Controller
@@ -36,11 +39,11 @@ const FormField = <T extends FieldValues>({
             name={name}
             render={({ field }) => (
                 <FormItem>
-                    <FormLabel className="label">{label}</FormLabel>
+                    <FormLabel className="text-light-100 font-normal text-sm mb-1">{label}</FormLabel>
                     <FormControl>
                         {type === "select" ? (
-                            <select {...field} className={`${cls} rounded-md`}>
-                                <option value="">Select…</option>
+                            <select {...field} className={inputClasses}>
+                                <option value="">Select...</option>
                                 {options.map((opt) => (
                                     <option key={opt} value={opt}>
                                         {opt}
@@ -48,7 +51,7 @@ const FormField = <T extends FieldValues>({
                                 ))}
                             </select>
                         ) : (
-                            <Input {...field} className={cls} type={type} placeholder={placeholder} />
+                            <Input {...field} className={inputClasses} type={type} placeholder={placeholder} />
                         )}
                     </FormControl>
                     <FormMessage />
