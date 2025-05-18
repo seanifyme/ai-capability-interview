@@ -260,34 +260,52 @@ const Agent = ({
 
         {/* buttons */}
         <div className="w-full flex justify-center">
-          {callStatus !== CallStatus.ACTIVE && callStatus !== CallStatus.PROCESSING ? (
-              <button 
-                className="relative btn-call" 
-                onClick={handleCall}
-                disabled={callStatus === CallStatus.PROCESSING}
-              >
-                <span
+          {(() => {
+            // This IIFE allows us to use proper conditional logic instead of ternary operators
+            if (callStatus === CallStatus.PROCESSING) {
+              return (
+                <button 
+                  className="btn-disconnect" 
+                  onClick={handleDisconnect}
+                  disabled={true}
+                >
+                  Processing...
+                </button>
+              );
+            } else if (callStatus === CallStatus.ACTIVE) {
+              return (
+                <button 
+                  className="btn-disconnect" 
+                  onClick={handleDisconnect}
+                  disabled={false}
+                >
+                  End
+                </button>
+              );
+            } else {
+              // INACTIVE, CONNECTING, FINISHED states
+              return (
+                <button 
+                  className="relative btn-call" 
+                  onClick={handleCall}
+                  disabled={callStatus === CallStatus.CONNECTING}
+                >
+                  <span
                     className={cn(
-                        "absolute animate-ping rounded-full opacity-75",
-                        callStatus !== CallStatus.CONNECTING && "hidden"
+                      "absolute animate-ping rounded-full opacity-75",
+                      callStatus !== CallStatus.CONNECTING && "hidden"
                     )}
-                />
-                <span className="relative">
-                  {callStatus === CallStatus.INACTIVE ||
-                  callStatus === CallStatus.FINISHED
+                  />
+                  <span className="relative">
+                    {callStatus === CallStatus.INACTIVE ||
+                     callStatus === CallStatus.FINISHED
                       ? "Call"
                       : ". . ."}
-                </span>
-              </button>
-          ) : (
-              <button 
-                className="btn-disconnect" 
-                onClick={handleDisconnect}
-                disabled={callStatus === CallStatus.PROCESSING}
-              >
-                End
-              </button>
-          )}
+                  </span>
+                </button>
+              );
+            }
+          })()}
         </div>
       </>
   );
