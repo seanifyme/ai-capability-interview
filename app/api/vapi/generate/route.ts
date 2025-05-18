@@ -10,7 +10,7 @@ export async function POST(request: Request) {
               storeInterviewExtended function tool
         ───────────────────────────────────────── */
         const body = await request.json();
-        console.log("🔥 Incoming Vapi request body:", body);
+        console.log("🔥 Incoming Vapi request body received");
 
         /* Extract the fields defined in the tool-schema */
         const {
@@ -63,9 +63,21 @@ export async function POST(request: Request) {
             }
         }
 
+        // Verify messages array has content
+        if (!Array.isArray(messages) || messages.length < 2) {
+            console.error(`❌ Interview has too few messages: ${messages?.length}`);
+            return Response.json(
+                { success: false, error: "Interview transcript too short or missing" },
+                { status: 400 }
+            );
+        }
+
+        console.log(`✅ Received ${messages.length} messages in the conversation`);
+
         /* ─────────────────────────────────────────
            3. Classify the role to help your dashboard
         ───────────────────────────────────────── */
+        console.log("🔍 Classifying role category...");
         const { text: roleCategoryRaw } = await generateText({
             model: google("gemini-2.0-flash-001"),
             prompt: `
@@ -87,6 +99,7 @@ Return the category only.
         });
 
         const roleCategory = roleCategoryRaw.trim().replace(/["']/g, "");
+        console.log(`✅ Role classified as: ${roleCategory}`);
 
         /* ─────────────────────────────────────────
            4. Generate the AI-Readiness report
@@ -101,18 +114,18 @@ AI-Readiness Audit using the employee inputs below.
 Inputs:
 • Role: ${role}
 • Department: ${department}
-• Team size: ${teamSize}
+• Team size: ${teamSize || "Not specified"}
 • Responsibilities: ${responsibilities}
-• Process map: ${processMap}
-• Metrics used: ${metricsUsed}
+• Process map: ${processMap || "Not provided"}
+• Metrics used: ${metricsUsed || "Not provided"}
 • Pain-points: ${painPoints}
-• Root causes: ${rootCauses}
+• Root causes: ${rootCauses || "Not specified"}
 • Current tools: ${currentTools}
-• Data flows: ${dataFlows}
+• Data flows: ${dataFlows || "Not specified"}
 • Existing AI exposure: ${aiExposure}
-• High-impact AI opportunities: ${aiOpportunities}
+• High-impact AI opportunities: ${aiOpportunities || "To be determined"}
 • Appetite for change: ${changeAppetite}
-• Blockers: ${blockers}
+• Blockers: ${blockers || "Not specified"}
 
 Return **only** JSON of the form:
 {
@@ -125,36 +138,69 @@ Return **only** JSON of the form:
       `.trim()
         });
 
-        const cleaned = reportOutput.replace(/```json|```/g, "").trim();
-        const {
-            readinessScore,
-            benchmarkSummary,
-            recommendations,
-            strengths,
-            weaknesses
-        } = JSON.parse(cleaned);
+        // Safely parse the JSON output with error handling
+        let readinessScore = 50; // default
+        let benchmarkSummary = "AI readiness assessment completed.";
+        let recommendations = ["Consider exploring AI solutions for your workflow."];
+        let strengths = ["Existing knowledge of business processes."];
+        let weaknesses = ["Limited AI exposure."];
+
+        try {
+            const cleaned = reportOutput.replace(/```json|```/g, "").trim();
+            console.log("Parsing Gemini response...");
+            
+            const parsedOutput = JSON.parse(cleaned);
+            
+            // Validate and assign each field with fallbacks
+            readinessScore = typeof parsedOutput.readinessScore === 'number' 
+                ? parsedOutput.readinessScore 
+                : 50;
+                
+            benchmarkSummary = typeof parsedOutput.benchmarkSummary === 'string' 
+                ? parsedOutput.benchmarkSummary 
+                : "AI readiness assessment completed.";
+                
+            recommendations = Array.isArray(parsedOutput.recommendations) 
+                ? parsedOutput.recommendations 
+                : ["Consider exploring AI solutions for your workflow."];
+                
+            strengths = Array.isArray(parsedOutput.strengths) 
+                ? parsedOutput.strengths 
+                : ["Existing knowledge of business processes."];
+                
+            weaknesses = Array.isArray(parsedOutput.weaknesses) 
+                ? parsedOutput.weaknesses 
+                : ["Limited AI exposure."];
+            
+            console.log(`✅ Successfully parsed AI readiness report. Score: ${readinessScore}/100`);
+        } catch (error) {
+            console.error("Error parsing Gemini output:", error);
+            console.error("Raw output:", reportOutput);
+            // Continue with default values rather than failing
+        }
 
         /* ─────────────────────────────────────────
            5. Store everything in Firestore
         ───────────────────────────────────────── */
+        console.log("💾 Saving interview to Firestore...");
         const interviewDoc = {
             userId,
             employeeId,
             role,
             roleCategory,
             department,
-            teamSize,
+            teamSize: teamSize || "Not specified",
             responsibilities,
-            processMap,
-            metricsUsed,
+            processMap: processMap || "Not specified",
+            metricsUsed: metricsUsed || "Not specified",
             painPoints,
-            rootCauses,
+            rootCauses: rootCauses || "Not specified",
             currentTools,
-            dataFlows,
+            dataFlows: dataFlows || "Not specified",
             aiExposure,
-            aiOpportunities,
+            aiOpportunities: aiOpportunities || "Not specified",
             changeAppetite,
-            blockers,
+            blockers: blockers || "Not specified",
             readinessScore,
             benchmarkSummary,
             recommendations,

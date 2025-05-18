@@ -58,10 +58,12 @@ const Agent = ({
     const onCallEnd   = () => {
       setCallStatus(CallStatus.FINISHED);
       // Don't redirect here - we'll handle it after processing
+      console.log("Call ended. Message count:", messages.length);
     };
 
     const onMessage = (m: Message) => {
       if (m.type === "transcript" && m.transcriptType === "final") {
+        console.log(`New message received - Role: ${m.role}, Content: ${m.transcript.substring(0, 50)}...`);
         setMessages(prev => [...prev, { role: m.role, content: m.transcript }]);
       }
     };
@@ -80,7 +82,7 @@ const Agent = ({
       vapi.off("speech-start", () => setIsSpeaking(true));
       vapi.off("speech-end",   () => setIsSpeaking(false));
     };
-  }, []);
+  }, [messages.length]);
 
   /* ---------- process interview and redirect after call ---------- */
   useEffect(() => {
@@ -93,32 +95,60 @@ const Agent = ({
         try {
           setCallStatus(CallStatus.PROCESSING);
           toast.info("Processing your interview data...");
+          console.log("Starting interview processing. Messages:", messages.length);
+          
+          // Extract information from messages to create better fields
+          const extractField = (fieldName: string): string => {
+            // Look for messages that might contain information about a specific field
+            const relevantMessages = messages.filter(m => 
+              m.content.toLowerCase().includes(fieldName.toLowerCase())
+            );
+            
+            return relevantMessages.length > 0 
+              ? relevantMessages[relevantMessages.length - 1].content 
+              : `Collected during interview regarding ${fieldName}`;
+          };
+          
+          // Prepare a more comprehensive payload
+          const payload = {
+            userId,
+            employeeId: interviewId,
+            role: jobTitle || "Professional",
+            department,
+            seniority,
+            messages,
+            // Extract better field values from the conversation
+            responsibilities: extractField("responsibilities") || "Collected during interview",
+            painPoints: extractField("pain points") || extractField("challenges") || "Collected during interview",
+            currentTools: extractField("tools") || extractField("software") || "Collected during interview",
+            aiExposure: extractField("ai") || extractField("artificial intelligence") || "Collected during interview", 
+            changeAppetite: extractField("change") || "Collected during interview",
+            // Include optional fields that might help generate better feedback
+            teamSize: extractField("team size") || "Unknown",
+            processMap: extractField("process") || extractField("workflow") || "Not explicitly discussed",
+            metricsUsed: extractField("metrics") || extractField("measure") || "Not explicitly discussed",
+            rootCauses: extractField("root cause") || "Not explicitly discussed",
+            dataFlows: extractField("data") || "Not explicitly discussed",
+            aiOpportunities: extractField("opportunity") || "Not explicitly discussed",
+            blockers: extractField("blocker") || extractField("challenge") || "Not explicitly discussed"
+          };
+          
+          console.log("Sending payload to API with extracted fields:", Object.keys(payload).join(", "));
           
           // Send interview data to the generate endpoint
           const response = await fetch('/api/vapi/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId,
-              employeeId: interviewId,
-              role: jobTitle || "Professional",
-              department,
-              seniority,
-              messages,
-              // Include minimum required fields with placeholders if needed
-              responsibilities: "Collected during interview",
-              painPoints: "Collected during interview",
-              currentTools: "Collected during interview",
-              aiExposure: "Collected during interview", 
-              changeAppetite: "Collected during interview"
-            })
+            body: JSON.stringify(payload)
           });
           
           if (!response.ok) {
             const error = await response.json();
+            console.error("API error response:", error);
             throw new Error(error.message || 'Failed to process interview');
           }
           
+          console.log("Interview processed successfully!");
           toast.success("Interview processed successfully!");
           // Redirect to dashboard after successful processing
           router.push('/');
