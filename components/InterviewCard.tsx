@@ -38,6 +38,13 @@ const InterviewCard = async ({
                         <p className="badge-text">{normalizedType}</p>
                     </div>
 
+                    {/* Incomplete Badge - only show if interview exists and is not finalized */}
+                    {interview && !interview.finalized && (
+                        <div className="absolute top-12 right-0 w-fit px-4 py-2 rounded-bl-lg bg-orange-500">
+                            <p className="badge-text">Incomplete Audit</p>
+                        </div>
+                    )}
+
                     {/* Fixed Logo Image */}
                     <Image
                         src="/logo.png"
@@ -70,15 +77,23 @@ const InterviewCard = async ({
 
                     {/* Summary Line */}
                     <p className="line-clamp-2 mt-5">
-                        View your report to explore tailored AI suggestions.
+                        {interview && !interview.finalized 
+                            ? "This audit was not completed. Consider starting a new interview."
+                            : "View your report to explore tailored AI suggestions."}
                     </p>
                 </div>
 
                 <div className="flex flex-row justify-between">
-                    {interview?.finalized && (
+                    {interview?.finalized ? (
                         <Button className="btn-primary">
                             <Link href={`/interview/${interviewId}/feedback`}>
                                 View Report
+                            </Link>
+                        </Button>
+                    ) : interview && (
+                        <Button className="btn-secondary">
+                            <Link href="/interview">
+                                Restart Audit
                             </Link>
                         </Button>
                     )}
