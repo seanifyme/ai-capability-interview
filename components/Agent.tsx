@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { vapi } from "@/lib/vapi.sdk";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ enum CallStatus {
   CONNECTING = "CONNECTING",
   ACTIVE = "ACTIVE",
   FINISHED = "FINISHED",
+  PROCESSING = "PROCESSING",
 }
 
 interface SavedMessage {
@@ -53,7 +55,10 @@ const Agent = ({
   /* ---------- Vapi event binding ---------- */
   useEffect(() => {
     const onCallStart = () => setCallStatus(CallStatus.ACTIVE);
-    const onCallEnd   = () => setCallStatus(CallStatus.FINISHED);
+    const onCallEnd   = () => {
+      setCallStatus(CallStatus.FINISHED);
+      // Don't redirect here - we'll handle it after processing
+    };
 
     const onMessage = (m: Message) => {
       if (m.type === "transcript" && m.transcriptType === "final") {
@@ -77,15 +82,57 @@ const Agent = ({
     };
   }, []);
 
-  /* ---------- redirect after call ---------- */
+  /* ---------- process interview and redirect after call ---------- */
   useEffect(() => {
     if (messages.length) {
       setLastMessage(messages[messages.length - 1].content);
     }
-    if (callStatus === CallStatus.FINISHED && messages.length > 0) {
-      router.push('/');
-    }
-  }, [messages, callStatus, interviewId, router]);
+    
+    const processInterview = async () => {
+      if (callStatus === CallStatus.FINISHED && messages.length > 0) {
+        try {
+          setCallStatus(CallStatus.PROCESSING);
+          toast.info("Processing your interview data...");
+          
+          // Send interview data to the generate endpoint
+          const response = await fetch('/api/vapi/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId,
+              employeeId: interviewId,
+              role: jobTitle || "Professional",
+              department,
+              seniority,
+              messages,
+              // Include minimum required fields with placeholders if needed
+              responsibilities: "Collected during interview",
+              painPoints: "Collected during interview",
+              currentTools: "Collected during interview",
+              aiExposure: "Collected during interview", 
+              changeAppetite: "Collected during interview"
+            })
+          });
+          
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to process interview');
+          }
+          
+          toast.success("Interview processed successfully!");
+          // Redirect to dashboard after successful processing
+          router.push('/');
+        } catch (error) {
+          console.error("Error processing interview:", error);
+          toast.error("Failed to process interview. Please try again later.");
+          // Still redirect to avoid getting stuck
+          router.push('/');
+        }
+      }
+    };
+    
+    processInterview();
+  }, [messages, callStatus, interviewId, userId, jobTitle, department, seniority, router]);
 
   /* ---------- start assistant ---------- */
   const handleCall = async () => {
@@ -174,25 +221,40 @@ const Agent = ({
             </div>
         )}
 
+        {/* status message */}
+        {callStatus === CallStatus.PROCESSING && (
+          <div className="text-center mt-4 text-primary-200">
+            Processing your interview data... Please wait.
+          </div>
+        )}
+
         {/* buttons */}
         <div className="w-full flex justify-center">
-          {callStatus !== CallStatus.ACTIVE ? (
-              <button className="relative btn-call" onClick={handleCall}>
-            <span
-                className={cn(
-                    "absolute animate-ping rounded-full opacity-75",
-                    callStatus !== CallStatus.CONNECTING && "hidden"
-                )}
-            />
+          {callStatus !== CallStatus.ACTIVE && callStatus !== CallStatus.PROCESSING ? (
+              <button 
+                className="relative btn-call" 
+                onClick={handleCall}
+                disabled={callStatus === CallStatus.PROCESSING}
+              >
+                <span
+                    className={cn(
+                        "absolute animate-ping rounded-full opacity-75",
+                        callStatus !== CallStatus.CONNECTING && "hidden"
+                    )}
+                />
                 <span className="relative">
-              {callStatus === CallStatus.INACTIVE ||
-              callStatus === CallStatus.FINISHED
-                  ? "Call"
-                  : ". . ."}
-            </span>
+                  {callStatus === CallStatus.INACTIVE ||
+                  callStatus === CallStatus.FINISHED
+                      ? "Call"
+                      : ". . ."}
+                </span>
               </button>
           ) : (
-              <button className="btn-disconnect" onClick={handleDisconnect}>
+              <button 
+                className="btn-disconnect" 
+                onClick={handleDisconnect}
+                disabled={callStatus === CallStatus.PROCESSING}
+              >
                 End
               </button>
           )}
