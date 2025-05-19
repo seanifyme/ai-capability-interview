@@ -2,6 +2,7 @@ import { generateText } from "ai";
 import { google } from "@ai-sdk/google";
 import { db } from "@/firebase/admin";
 import { getRandomInterviewCover, formatInterviewForTraining } from "@/lib/utils";
+import { generateOpenAIFeedback } from "@/lib/openai";
 
 export async function POST(request: Request) {
     try {
@@ -102,12 +103,9 @@ Return the category only.
         console.log(`✅ Role classified as: ${roleCategory}`);
 
         /* ─────────────────────────────────────────
-           4. Generate the AI-Readiness report
+           4. Generate the AI-Readiness report using OpenAI GPT-4o
         ───────────────────────────────────────── */
-        console.log("🧠 Sending prompt to Gemini...");
-        const { text: reportOutput } = await generateText({
-            model: google("gemini-2.0-flash-001"),
-            prompt: `
+        const prompt = `
 You are a senior AI-strategy consultant. Produce a concise
 AI-Readiness Audit using the employee inputs below.
 
@@ -135,10 +133,8 @@ Return **only** JSON of the form:
   "strengths": [string],
   "weaknesses": [string]
 }
-      `.trim()
-        });
+        `.trim();
 
-        // Safely parse the JSON output with error handling
         let readinessScore = 50; // default
         let benchmarkSummary = "AI readiness assessment completed.";
         let recommendations = ["Consider exploring AI solutions for your workflow."];
@@ -146,36 +142,28 @@ Return **only** JSON of the form:
         let weaknesses = ["Limited AI exposure."];
 
         try {
+            const reportOutput = await generateOpenAIFeedback(prompt);
             const cleaned = reportOutput.replace(/```json|```/g, "").trim();
-            console.log("Parsing Gemini response...");
-            
+            console.log("Parsing OpenAI response...");
             const parsedOutput = JSON.parse(cleaned);
-            
-            // Validate and assign each field with fallbacks
             readinessScore = typeof parsedOutput.readinessScore === 'number' 
                 ? parsedOutput.readinessScore 
                 : 50;
-                
             benchmarkSummary = typeof parsedOutput.benchmarkSummary === 'string' 
                 ? parsedOutput.benchmarkSummary 
                 : "AI readiness assessment completed.";
-                
             recommendations = Array.isArray(parsedOutput.recommendations) 
                 ? parsedOutput.recommendations 
                 : ["Consider exploring AI solutions for your workflow."];
-                
             strengths = Array.isArray(parsedOutput.strengths) 
                 ? parsedOutput.strengths 
                 : ["Existing knowledge of business processes."];
-                
             weaknesses = Array.isArray(parsedOutput.weaknesses) 
                 ? parsedOutput.weaknesses 
                 : ["Limited AI exposure."];
-            
             console.log(`✅ Successfully parsed AI readiness report. Score: ${readinessScore}/100`);
         } catch (error) {
-            console.error("Error parsing Gemini output:", error);
-            console.error("Raw output:", reportOutput);
+            console.error("Error parsing OpenAI output:", error);
             // Continue with default values rather than failing
         }
 
