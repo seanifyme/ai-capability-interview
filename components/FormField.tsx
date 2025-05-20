@@ -28,6 +28,7 @@ interface FormFieldProps<T extends FieldValues> {
     type?: "text" | "email" | "password" | "select";
     options?: string[];
     compact?: boolean;
+    onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const FormField = <T extends FieldValues>({
@@ -38,6 +39,7 @@ const FormField = <T extends FieldValues>({
     type = "text",
     options = [],
     compact = false,
+    onChange,
 }: FormFieldProps<T>) => {
     const [showPassword, setShowPassword] = useState(false);
 
@@ -94,6 +96,10 @@ const FormField = <T extends FieldValues>({
                                         className={inputClasses} 
                                         type={type === "password" ? (showPassword ? "text" : "password") : type}
                                         placeholder={placeholder}
+                                        onChange={(e) => {
+                                            field.onChange(e);
+                                            onChange?.(e);
+                                        }}
                                     />
                                     {type === "password" && (
                                         <button

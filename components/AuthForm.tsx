@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useState } from "react";
 
 import { auth } from "@/firebase/client";
 import {
@@ -18,6 +19,7 @@ import {
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import FormField from "./FormField";
+import { PasswordRequirements } from "./PasswordRequirements";
 import { signIn, signUp } from "@/lib/actions/auth.action";
 
 /* ─── dropdown options (keep in sync with types/index.d.ts) ─── */
@@ -40,13 +42,24 @@ const EMIRATE = [
   "Fujairah",
 ] as const;
 
+/* ─── password validation ─────────────────────────────────── */
+const passwordSchema = z.string()
+  .min(3, "Password must be at least 3 characters")
+  .refine(
+    (password) => /[a-zA-Z]/.test(password) && /[0-9]/.test(password),
+    "Password must contain both letters and numbers"
+  )
+  .refine(
+    (password) => /[!@#$%^&*(),.?":{}|<>]/.test(password),
+    "Password must contain at least one special character"
+  );
+
 /* ─── zod schema (dynamic) ──────────────────────────────────── */
 const authFormSchema = (formType: FormType) =>
     z.object({
       name: formType === "sign-up" ? z.string().min(3) : z.string().optional(),
       email: z.string().email(),
-      password: z.string().min(3),
-
+      password: formType === "sign-up" ? passwordSchema : z.string().min(3),
       jobTitle: z.string().optional(),
       seniority: z.enum(SENIORITY).optional(),
       department: z.enum(DEPT).optional(),
@@ -56,6 +69,7 @@ const authFormSchema = (formType: FormType) =>
 /* ─── component ─────────────────────────────────────────────── */
 const AuthForm = ({ type }: { type: FormType }) => {
   const router = useRouter();
+  const [password, setPassword] = useState("");
 
   const form = useForm<z.infer<ReturnType<typeof authFormSchema>>>({
     resolver: zodResolver(authFormSchema(type)),
@@ -184,15 +198,9 @@ const AuthForm = ({ type }: { type: FormType }) => {
                     label="Password"
                     placeholder="••••••••"
                     type="password"
+                    onChange={(e) => setPassword(e.target.value)}
                 />
-                <div className="mt-2 space-y-1.5 bg-white/5 p-2.5 rounded-lg">
-                  <p className="text-xs text-white/70 font-medium">Password requirements:</p>
-                  <ul className="text-xs text-white/60 list-disc list-inside space-y-0.5">
-                    <li>At least 3 characters long</li>
-                    <li>Mix of letters and numbers recommended</li>
-                    <li>Special characters make it stronger</li>
-                  </ul>
-                </div>
+                {type === "sign-up" && <PasswordRequirements password={password} />}
               </div>
 
               {/* Profiling fields (each takes one column) */}
