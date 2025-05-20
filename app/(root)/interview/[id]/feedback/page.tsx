@@ -54,6 +54,13 @@ const Feedback = async ({ params }: RouteParams) => {
                 </h1>
             </div>
 
+            {/* Completed Badge */}
+            <div className="flex flex-row justify-center mt-2">
+                <div className="bg-green-600 text-white px-4 py-1 rounded-full">
+                    <p className="badge-text text-sm">Audit Completed</p>
+                </div>
+            </div>
+
             {/* Score + Date + Role Category */}
             <div className="flex flex-row justify-center mt-4">
                 <div className="flex flex-row gap-5">
