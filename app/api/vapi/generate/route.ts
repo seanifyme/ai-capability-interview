@@ -143,7 +143,10 @@ Return **only** JSON of the form:
 
         try {
             const reportOutput = await generateOpenAIFeedback(prompt);
-            const cleaned = reportOutput.replace(/```json|```/g, "").trim();
+            if (!reportOutput) {
+                throw new Error("No response from OpenAI");
+            }
+            const cleaned = reportOutput.replace(/^```json\n|^```\n|```$/g, "").trim();
             console.log("Parsing OpenAI response...");
             const parsedOutput = JSON.parse(cleaned);
             readinessScore = typeof parsedOutput.readinessScore === 'number' 

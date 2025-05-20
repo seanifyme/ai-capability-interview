@@ -6,7 +6,7 @@ const openai = new OpenAI({
 
 export async function generateOpenAIFeedback(prompt: string) {
   const completion = await openai.chat.completions.create({
-    model: "gpt-4o",
+    model: "gpt-4",
     messages: [
       { role: "system", content: "You are a senior AI-strategy consultant. Return only valid JSON as specified." },
       { role: "user", content: prompt },
