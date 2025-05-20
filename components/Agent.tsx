@@ -62,19 +62,25 @@ const Agent = ({
 
     const onCallEnd = () => {
       console.log("Call ended. Message count:", messages.length);
-      // Only set to FINISHED if we have enough messages
-      if (messages.length >= 10) {
-        setCallStatus(CallStatus.FINISHED);
-      } else {
-        console.log("Call ended prematurely, not enough messages to process");
-        toast.error("Interview ended unexpectedly. Please try again.");
-        setCallStatus(CallStatus.INACTIVE);
-      }
+      
+      // Always mark as FINISHED - we'll determine complete vs incomplete during processing
+      setCallStatus(CallStatus.FINISHED);
     };
 
     const onMessage = (m: Message) => {
       if (m.type === "transcript" && m.transcriptType === "final") {
         console.log(`New message received - Role: ${m.role}, Content: ${m.transcript.substring(0, 50)}...`);
+        
+        // Check for completion phrases from the assistant
+        if (m.role === "assistant" && 
+            (m.transcript.includes("interview is now complete") || 
+             m.transcript.includes("thank you for completing") ||
+             m.transcript.includes("we've completed all the questions"))) {
+          // Mark that we found a completion message
+          console.log("✅ Found interview completion message");
+          (window as any).interviewCompleted = true;
+        }
+        
         setMessages(prev => [...prev, { role: m.role, content: m.transcript }]);
       }
     };
@@ -110,9 +116,9 @@ const Agent = ({
     }
     
     const processInterview = async () => {
-      // Only process if we have enough messages (at least 10 exchanges)
-      if (messages.length < 10) {
-        console.log("Not enough messages to process interview:", messages.length);
+      // Minimum messages check to filter extreme cases
+      if (messages.length < 5) {
+        console.log("Too few messages to process interview:", messages.length);
         return;
       }
 
@@ -141,6 +147,9 @@ const Agent = ({
             : `Collected during interview regarding ${fieldName}`;
         };
         
+        // Check if interview was properly completed
+        const interviewCompleted = (window as any).interviewCompleted === true;
+        
         // Prepare a more comprehensive payload
         const payload = {
           userId,
@@ -149,6 +158,8 @@ const Agent = ({
           department,
           seniority,
           messages,
+          // Mark if the interview was properly completed
+          finalized: interviewCompleted, 
           // Extract better field values from the conversation
           responsibilities: extractField("responsibilities") || "Collected during interview",
           painPoints: extractField("pain points") || extractField("challenges") || "Collected during interview",
@@ -166,6 +177,7 @@ const Agent = ({
         };
         
         console.log("Sending payload to API with extracted fields:", Object.keys(payload).join(", "));
+        console.log("Interview completed status:", interviewCompleted);
         
         // Send interview data to the generate endpoint
         const response = await fetch('/api/vapi/generate', {
@@ -179,6 +191,9 @@ const Agent = ({
           console.error("API error response:", error);
           throw new Error(error.message || 'Failed to process interview');
         }
+        
+        // Clear the completion flag after processing
+        (window as any).interviewCompleted = false;
         
         console.log("Interview processed successfully!");
         toast.success("Interview processed successfully!");

@@ -197,7 +197,7 @@ Return **only** JSON of the form:
             recommendations,
             strengths,
             weaknesses,
-            finalized: true,
+            finalized: body.finalized !== undefined ? body.finalized : true,
             coverImage: getRandomInterviewCover(),
             createdAt: new Date().toISOString(),
             type: "AI Readiness",
