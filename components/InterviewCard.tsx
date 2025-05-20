@@ -38,10 +38,10 @@ const InterviewCard = async ({
                         <p className="badge-text">{normalizedType}</p>
                     </div>
 
-                    {/* Incomplete Badge - only show if interview exists and is not finalized */}
-                    {interview && !interview.finalized && (
-                        <div className="absolute top-12 right-0 w-fit px-4 py-2 rounded-bl-lg bg-orange-500">
-                            <p className="badge-text">Incomplete Audit</p>
+                    {/* Completed/Incomplete Badge */}
+                    {interview && (
+                        <div className={`absolute top-12 right-0 w-fit px-4 py-2 rounded-bl-lg ${interview.finalized ? 'bg-green-600' : 'bg-orange-500'}`}>
+                            <p className="badge-text">{interview.finalized ? 'Audit Completed' : 'Incomplete Audit'}</p>
                         </div>
                     )}
 
