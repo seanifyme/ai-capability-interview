@@ -56,10 +56,11 @@ export async function getInterviewsByUserId(
   const interviews = await db
       .collection("interviews")
       .where("userId", "==", userId)
-      .orderBy("createdAt", "desc")
+      .orderBy("createdAt", "asc")
       .get();
 
-  return interviews.docs.map((doc) => ({
+  // Since we're getting them in ascending order, reverse the array before returning
+  return interviews.docs.reverse().map((doc) => ({
     id: doc.id,
     ...doc.data(),
   })) as Interview[];
