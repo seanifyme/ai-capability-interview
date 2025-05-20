@@ -71,13 +71,13 @@ const Agent = ({
       if (m.type === "transcript" && m.transcriptType === "final") {
         console.log(`New message received - Role: ${m.role}, Content: ${m.transcript.substring(0, 50)}...`);
         
-        // Check for completion phrases from the assistant
+        // Check for completion phrases from the assistant based on the exact Vapi system prompt
         if (m.role === "assistant" && 
-            (m.transcript.includes("interview is now complete") || 
-             m.transcript.includes("thank you for completing") ||
-             m.transcript.includes("we've completed all the questions"))) {
+            (m.transcript.includes("Brilliant — that's all I need") || 
+             m.transcript.includes("You'll receive your AI Readiness Report shortly") ||
+             m.transcript.includes("Have a great day"))) {
           // Mark that we found a completion message
-          console.log("✅ Found interview completion message");
+          console.log("✅ Found interview completion message from Leila");
           (window as any).interviewCompleted = true;
         }
         
@@ -246,6 +246,12 @@ const Agent = ({
 
   /* ---------- stop call ---------- */
   const handleDisconnect = () => {
+    // Only set interviewCompleted if we've manually ended the call
+    // before Leila has completed her script
+    if (!(window as any).interviewCompleted) {
+      console.log("Manual disconnection before completion. Marking as incomplete.");
+    }
+    
     vapi.stop();
     setCallStatus(CallStatus.FINISHED);
   };
