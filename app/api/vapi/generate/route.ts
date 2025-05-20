@@ -105,35 +105,59 @@ Return the category only.
         /* ─────────────────────────────────────────
            4. Generate the AI-Readiness report using OpenAI GPT-4o
         ───────────────────────────────────────── */
-        const prompt = `
-You are a senior AI-strategy consultant. Produce a concise
-AI-Readiness Audit using the employee inputs below.
+        // Extract conversation messages for analysis
+        const userMessages = messages
+            .filter(m => m.role === "user")
+            .map(m => m.content);
 
-Inputs:
+        const assistantMessages = messages
+            .filter(m => m.role === "assistant")
+            .map(m => m.content);
+
+        // Extract 10 most substantive user responses (typically the longest ones)
+        const substantiveResponses = [...userMessages]
+            .sort((a, b) => b.length - a.length)
+            .slice(0, 10);
+
+        const prompt = `
+You are a senior AI-strategy consultant analyzing an interview transcript to produce a comprehensive AI-Readiness Audit.
+
+INTERVIEW CONTEXT:
 • Role: ${role}
 • Department: ${department}
-• Team size: ${teamSize || "Not specified"}
+• Team Size: ${teamSize || "Not specified"}
+
+PRE-EXTRACTED INTERVIEW INSIGHTS:
 • Responsibilities: ${responsibilities}
-• Process map: ${processMap || "Not provided"}
-• Metrics used: ${metricsUsed || "Not provided"}
-• Pain-points: ${painPoints}
-• Root causes: ${rootCauses || "Not specified"}
-• Current tools: ${currentTools}
-• Data flows: ${dataFlows || "Not specified"}
-• Existing AI exposure: ${aiExposure}
-• High-impact AI opportunities: ${aiOpportunities || "To be determined"}
-• Appetite for change: ${changeAppetite}
+• Process Map: ${processMap || "Not provided"}
+• Metrics Used: ${metricsUsed || "Not provided"}
+• Pain Points: ${painPoints}
+• Root Causes: ${rootCauses || "Not specified"}
+• Current Tools: ${currentTools}
+• Data Flows: ${dataFlows || "Not specified"}
+• Existing AI Exposure: ${aiExposure}
+• High-Impact AI Opportunities: ${aiOpportunities || "To be determined"}
+• Appetite for Change: ${changeAppetite}
 • Blockers: ${blockers || "Not specified"}
+
+KEY USER RESPONSES FROM INTERVIEW:
+${substantiveResponses.map((response, i) => `[${i+1}] ${response}`).join('\n\n')}
+
+Instructions:
+1. Analyze both the pre-extracted insights AND the key user responses
+2. Thoroughly assess the employee's AI readiness based on their tools, workflows, challenges, and opportunities mentioned
+3. Identify specific, actionable AI implementation opportunities relevant to their role
+4. Evaluate their technical sophistication, data maturity, and current pain points
 
 Return **only** JSON of the form:
 {
-  "readinessScore": number,
-  "benchmarkSummary": string,
-  "recommendations": [string],
-  "strengths": [string],
-  "weaknesses": [string]
+  "readinessScore": number between 1-100,
+  "benchmarkSummary": concise summary of readiness findings with role-specific context,
+  "recommendations": [3-5 specific, actionable AI implementation recommendations],
+  "strengths": [2-4 existing strengths that support AI adoption],
+  "weaknesses": [2-4 current weaknesses that might impede AI adoption]
 }
-        `.trim();
+`.trim();
 
         let readinessScore = 50; // default
         let benchmarkSummary = "AI readiness assessment completed.";

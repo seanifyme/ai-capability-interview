@@ -135,20 +135,131 @@ const Agent = ({
         toast.info("Processing your interview data...");
         console.log("Starting interview processing. Messages:", messages.length);
         
-        // Extract information from messages to create better fields
-        const extractField = (fieldName: string): string => {
-          // Look for messages that might contain information about a specific field
-          const relevantMessages = messages.filter(m => 
-            m.content.toLowerCase().includes(fieldName.toLowerCase())
-          );
+        // Replace with improved interview completion check
+        // Check if interview was properly completed and has enough substantive content
+        const checkInterviewCompleteness = () => {
+          // First, verify if we have the explicit completion message flag
+          const hasCompletionFlag = (window as any).interviewCompleted === true;
           
-          return relevantMessages.length > 0 
-            ? relevantMessages[relevantMessages.length - 1].content 
-            : `Collected during interview regarding ${fieldName}`;
+          // If we don't have the completion flag, check for minimum requirements
+          if (!hasCompletionFlag) {
+            return false;
+          }
+          
+          // Count substantive user responses (longer than 10 characters)
+          const substantiveUserMessages = messages.filter(msg => 
+            msg.role === 'user' && msg.content.trim().length > 10
+          ).length;
+          
+          // Verify there are enough substantive user responses
+          // This prevents incomplete interviews from being processed
+          return substantiveUserMessages >= 5;
         };
         
-        // Check if interview was properly completed
-        const interviewCompleted = (window as any).interviewCompleted === true;
+        // Get the interview completion status
+        const interviewCompleted = checkInterviewCompleteness();
+        
+        // Extract information from messages to create better fields
+        const extractConversationInsights = () => {
+          // Group consecutive messages by role for better context
+          const groupedByUserTurns: { user: string[], assistant: string[] }[] = [];
+          let currentTurn: { user: string[], assistant: string[] } = { user: [], assistant: [] };
+          
+          // Process messages to create conversation turns
+          messages.forEach(msg => {
+            if (msg.role === 'user') {
+              if (currentTurn.assistant.length > 0) {
+                // If we already have assistant messages, this is a new turn
+                groupedByUserTurns.push(currentTurn);
+                currentTurn = { user: [msg.content], assistant: [] };
+              } else {
+                // Still in the same turn
+                currentTurn.user.push(msg.content);
+              }
+            } else {
+              // Add assistant messages to current turn
+              currentTurn.assistant.push(msg.content);
+            }
+          });
+          
+          // Add the last turn
+          if (currentTurn.user.length > 0 || currentTurn.assistant.length > 0) {
+            groupedByUserTurns.push(currentTurn);
+          }
+          
+          // Create a conversation summary by topic
+          const insights: Record<string, string> = {
+            responsibilities: '',
+            painPoints: '',
+            currentTools: '',
+            aiExposure: '',
+            changeAppetite: '',
+            teamSize: '',
+            processMap: '',
+            metricsUsed: '',
+            rootCauses: '',
+            dataFlows: '',
+            aiOpportunities: '',
+            blockers: ''
+          };
+          
+          // Keywords and phrases related to each field
+          const fieldKeywords: Record<string, string[]> = {
+            responsibilities: ['responsibilities', 'day to day', 'daily', 'tasks', 'duties', 'job', 'work on', 'main role'],
+            painPoints: ['pain', 'challenges', 'frustrates', 'problems', 'difficult', 'bottleneck', 'slow', 'issue'],
+            currentTools: ['tools', 'software', 'systems', 'applications', 'platform', 'technology', 'use', 'selenium', 'jenkins', 'jira'],
+            aiExposure: ['ai', 'artificial intelligence', 'machine learning', 'automation', 'exposure to ai'],
+            changeAppetite: ['change', 'appetite', 'willing', 'open to', 'adapt', 'improve', 'transformation'],
+            teamSize: ['team size', 'people', 'colleagues', 'members', 'work with', 'department size'],
+            processMap: ['process', 'workflow', 'steps', 'procedure', 'how you', 'pipeline'],
+            metricsUsed: ['metrics', 'measure', 'kpi', 'performance', 'tracked', 'evaluated', 'success'],
+            rootCauses: ['root cause', 'reason', 'why', 'underlying', 'source', 'origin'],
+            dataFlows: ['data', 'information', 'flows', 'privacy', 'security', 'sensitive'],
+            aiOpportunities: ['opportunity', 'potential', 'could be', 'automate', 'improve with', 'benefit from'],
+            blockers: ['blocker', 'obstacle', 'barrier', 'preventing', 'stopping', 'challenge', 'issue']
+          };
+          
+          // Extract insights for each field by looking at conversation context
+          Object.keys(insights).forEach(field => {
+            const keywords = fieldKeywords[field];
+            
+            // Find turns where this topic was discussed
+            const relevantTurns = groupedByUserTurns.filter(turn => {
+              // Check if any assistant question contains these keywords
+              const assistantMentioned = turn.assistant.some(msg => 
+                keywords.some(keyword => msg.toLowerCase().includes(keyword.toLowerCase()))
+              );
+              
+              // Check if user response contains these keywords or is a reply to a relevant question
+              const userMentioned = turn.user.some(msg => 
+                keywords.some(keyword => msg.toLowerCase().includes(keyword.toLowerCase()))
+              );
+              
+              return assistantMentioned || userMentioned;
+            });
+            
+            if (relevantTurns.length > 0) {
+              // Combine all user responses from relevant turns
+              const userResponses = relevantTurns.flatMap(turn => turn.user).filter(Boolean);
+              
+              if (userResponses.length > 0) {
+                // Use the most detailed response (typically the longest one)
+                const bestResponse = userResponses.sort((a, b) => b.length - a.length)[0];
+                insights[field] = bestResponse;
+              }
+            }
+            
+            // If no good answer was found, use a default
+            if (!insights[field]) {
+              insights[field] = `Not explicitly discussed during interview`;
+            }
+          });
+          
+          return insights;
+        };
+        
+        // Get actual conversation insights
+        const insights = extractConversationInsights();
         
         // Prepare a more comprehensive payload
         const payload = {
@@ -160,20 +271,19 @@ const Agent = ({
           messages,
           // Mark if the interview was properly completed
           finalized: interviewCompleted, 
-          // Extract better field values from the conversation
-          responsibilities: extractField("responsibilities") || "Collected during interview",
-          painPoints: extractField("pain points") || extractField("challenges") || "Collected during interview",
-          currentTools: extractField("tools") || extractField("software") || "Collected during interview",
-          aiExposure: extractField("ai") || extractField("artificial intelligence") || "Collected during interview", 
-          changeAppetite: extractField("change") || "Collected during interview",
-          // Include optional fields that might help generate better feedback
-          teamSize: extractField("team size") || "Unknown",
-          processMap: extractField("process") || extractField("workflow") || "Not explicitly discussed",
-          metricsUsed: extractField("metrics") || extractField("measure") || "Not explicitly discussed",
-          rootCauses: extractField("root cause") || "Not explicitly discussed",
-          dataFlows: extractField("data") || "Not explicitly discussed",
-          aiOpportunities: extractField("opportunity") || "Not explicitly discussed",
-          blockers: extractField("blocker") || extractField("challenge") || "Not explicitly discussed"
+          // Use extracted insights for all fields
+          responsibilities: insights.responsibilities,
+          painPoints: insights.painPoints,
+          currentTools: insights.currentTools,
+          aiExposure: insights.aiExposure, 
+          changeAppetite: insights.changeAppetite,
+          teamSize: insights.teamSize,
+          processMap: insights.processMap,
+          metricsUsed: insights.metricsUsed,
+          rootCauses: insights.rootCauses,
+          dataFlows: insights.dataFlows,
+          aiOpportunities: insights.aiOpportunities,
+          blockers: insights.blockers
         };
         
         console.log("Sending payload to API with extracted fields:", Object.keys(payload).join(", "));
