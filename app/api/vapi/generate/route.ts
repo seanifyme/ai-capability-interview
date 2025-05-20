@@ -120,12 +120,13 @@ Return the category only.
             .slice(0, 10);
 
         const prompt = `
-You are a senior AI-strategy consultant analyzing an interview transcript to produce a comprehensive AI-Readiness Audit.
+You are a senior AI-strategy consultant analyzing an interview transcript to produce a comprehensive AI-Readiness Audit. Your assessment will help organizations understand their AI maturity and implementation readiness.
 
 INTERVIEW CONTEXT:
 • Role: ${role}
 • Department: ${department}
 • Team Size: ${teamSize || "Not specified"}
+• Interview Completion Status: ${body.finalized ? "Complete" : "Incomplete"}
 
 PRE-EXTRACTED INTERVIEW INSIGHTS:
 • Responsibilities: ${responsibilities}
@@ -143,19 +144,56 @@ PRE-EXTRACTED INTERVIEW INSIGHTS:
 KEY USER RESPONSES FROM INTERVIEW:
 ${substantiveResponses.map((response, i) => `[${i+1}] ${response}`).join('\n\n')}
 
+ANALYSIS FRAMEWORK:
+1. Technical Readiness (25%):
+   - Current tools sophistication
+   - Data infrastructure and quality
+   - Integration capabilities
+   - Technical debt assessment
+
+2. Process Readiness (25%):
+   - Clear process documentation
+   - Repetitive task identification
+   - Decision points that could benefit from AI
+   - Existing automation maturity
+
+3. People Readiness (25%):
+   - Team AI literacy
+   - Leadership support
+   - Change appetite
+   - Skills availability
+
+4. Strategic Readiness (25%):
+   - Clear metrics and KPIs
+   - Resource allocation potential
+   - Alignment with business goals
+   - Competitive pressure understanding
+
 Instructions:
-1. Analyze both the pre-extracted insights AND the key user responses
-2. Thoroughly assess the employee's AI readiness based on their tools, workflows, challenges, and opportunities mentioned
-3. Identify specific, actionable AI implementation opportunities relevant to their role
-4. Evaluate their technical sophistication, data maturity, and current pain points
+1. Conduct a deep analysis of both pre-extracted insights AND the key user responses
+2. For each framework category, identify specific evidence from the interview
+3. Tailor your assessment to the specific role/department context
+4. Focus on practical, implementation-oriented insights rather than theoretical possibilities
+5. Consider both technical feasibility and organizational readiness in your scoring
+6. For each recommendation, include "Why", "What", and "How" components
 
 Return **only** JSON of the form:
 {
-  "readinessScore": number between 1-100,
-  "benchmarkSummary": concise summary of readiness findings with role-specific context,
-  "recommendations": [3-5 specific, actionable AI implementation recommendations],
-  "strengths": [2-4 existing strengths that support AI adoption],
-  "weaknesses": [2-4 current weaknesses that might impede AI adoption]
+  "readinessScore": number between 1-100 based on the framework percentages,
+  "benchmarkSummary": concise evidence-based assessment (100-150 words) with role-specific context,
+  "recommendations": [
+    "Implement [specific AI solution] for [specific process] to address [specific pain point]. Begin with [practical first step].",
+    "Automate [specific workflow] using [appropriate technology] to reduce [quantified inefficiency]. This would require [key implementation requirement].",
+    "Integrate [specific AI capability] into [existing tool] to enhance [specific metric]."
+  ],
+  "strengths": [
+    "Specific strength with evidence from interview",
+    "Another concrete strength tied to readiness"
+  ],
+  "weaknesses": [
+    "Specific weakness with evidence from interview",
+    "Another concrete weakness tied to readiness"
+  ]
 }
 `.trim();
 

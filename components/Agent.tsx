@@ -205,18 +205,38 @@ const Agent = ({
           
           // Keywords and phrases related to each field
           const fieldKeywords: Record<string, string[]> = {
-            responsibilities: ['responsibilities', 'day to day', 'daily', 'tasks', 'duties', 'job', 'work on', 'main role'],
-            painPoints: ['pain', 'challenges', 'frustrates', 'problems', 'difficult', 'bottleneck', 'slow', 'issue'],
-            currentTools: ['tools', 'software', 'systems', 'applications', 'platform', 'technology', 'use', 'selenium', 'jenkins', 'jira'],
-            aiExposure: ['ai', 'artificial intelligence', 'machine learning', 'automation', 'exposure to ai'],
-            changeAppetite: ['change', 'appetite', 'willing', 'open to', 'adapt', 'improve', 'transformation'],
-            teamSize: ['team size', 'people', 'colleagues', 'members', 'work with', 'department size'],
-            processMap: ['process', 'workflow', 'steps', 'procedure', 'how you', 'pipeline'],
-            metricsUsed: ['metrics', 'measure', 'kpi', 'performance', 'tracked', 'evaluated', 'success'],
-            rootCauses: ['root cause', 'reason', 'why', 'underlying', 'source', 'origin'],
-            dataFlows: ['data', 'information', 'flows', 'privacy', 'security', 'sensitive'],
-            aiOpportunities: ['opportunity', 'potential', 'could be', 'automate', 'improve with', 'benefit from'],
-            blockers: ['blocker', 'obstacle', 'barrier', 'preventing', 'stopping', 'challenge', 'issue']
+            responsibilities: ['responsibilities', 'day to day', 'daily', 'tasks', 'duties', 'job', 'work on', 'main role', 'accountable for', 'in charge of', 'manage', 'lead', 'coordinate'],
+            painPoints: ['pain', 'challenges', 'frustrates', 'problems', 'difficult', 'bottleneck', 'slow', 'issue', 'friction', 'tedious', 'waste time', 'annoying', 'inefficient', 'manual', 'takes too long'],
+            currentTools: ['tools', 'software', 'systems', 'applications', 'platform', 'technology', 'use', 'selenium', 'jenkins', 'jira', 'excel', 'database', 'crm', 'erp', 'saas', 'cloud', 'app', 'program', 'suite', 'framework'],
+            aiExposure: ['ai', 'artificial intelligence', 'machine learning', 'automation', 'exposure to ai', 'chatgpt', 'ml', 'nlp', 'analytics', 'data science', 'algorithms', 'predictive', 'gpt', 'openai', 'neural networks', 'deep learning'],
+            changeAppetite: ['change', 'appetite', 'willing', 'open to', 'adapt', 'improve', 'transformation', 'receptive', 'resistant', 'excited about', 'concerned about', 'hesitant', 'eager', 'ready for', 'leadership support'],
+            teamSize: ['team size', 'people', 'colleagues', 'members', 'work with', 'department size', 'headcount', 'reports', 'team members', 'staff', 'organization size'],
+            processMap: ['process', 'workflow', 'steps', 'procedure', 'how you', 'pipeline', 'sequence', 'lifecycle', 'methodology', 'handoff', 'flow', 'stage', 'approach', 'system'],
+            metricsUsed: ['metrics', 'measure', 'kpi', 'performance', 'tracked', 'evaluated', 'success', 'goals', 'targets', 'objectives', 'benchmark', 'indicators', 'roi', 'dashboard', 'reporting', 'analytics'],
+            rootCauses: ['root cause', 'reason', 'why', 'underlying', 'source', 'origin', 'fundamental', 'driver', 'core issue', 'heart of the problem', 'stems from', 'basis', 'foundational problem'],
+            dataFlows: ['data', 'information', 'flows', 'privacy', 'security', 'sensitive', 'sharing', 'access', 'transfer', 'input', 'output', 'storage', 'database', 'repository', 'pipeline', 'integration'],
+            aiOpportunities: ['opportunity', 'potential', 'could be', 'automate', 'improve with', 'benefit from', 'streamline', 'enhance', 'optimize', 'efficiency gain', 'time-saving', 'reduce manual', 'accelerate'],
+            blockers: ['blocker', 'obstacle', 'barrier', 'preventing', 'stopping', 'challenge', 'issue', 'limitation', 'constraint', 'roadblock', 'impediment', 'showstopper', 'bottleneck', 'dependency']
+          };
+          
+          // Add a weight-based scoring function to improve quality of extraction
+          const getResponseScore = (response: string, keywords: string[]): number => {
+            let score = 0;
+            // Base score on response length (longer typically means more detail)
+            score += Math.min(response.length / 20, 10); // Cap at 10 points for length
+            
+            // Additional points for containing multiple keywords
+            const keywordCount = keywords.filter(keyword => 
+              response.toLowerCase().includes(keyword.toLowerCase())
+            ).length;
+            score += keywordCount * 2;
+            
+            // Bonus for responses that appear to provide specific details
+            if (/\d+/.test(response)) score += 5; // Contains numbers
+            if (/\b(because|since|due to)\b/i.test(response)) score += 3; // Contains reasoning
+            if (response.includes(',')) score += 2; // Contains lists or clauses
+            
+            return score;
           };
           
           // Extract insights for each field by looking at conversation context
@@ -246,6 +266,36 @@ const Agent = ({
                 // Use the most detailed response (typically the longest one)
                 const bestResponse = userResponses.sort((a, b) => b.length - a.length)[0];
                 insights[field] = bestResponse;
+              }
+            }
+            
+            // Replace with improved version that uses scoring
+            if (relevantTurns.length > 0) {
+              // Combine all user responses from relevant turns
+              const userResponses = relevantTurns.flatMap(turn => turn.user).filter(Boolean);
+              
+              if (userResponses.length > 0) {
+                // Score responses based on relevance and detail
+                const scoredResponses = userResponses.map(response => ({
+                  text: response,
+                  score: getResponseScore(response, keywords)
+                }));
+                
+                // Sort by score (higher is better)
+                scoredResponses.sort((a, b) => b.score - a.score);
+                
+                // For very important fields, consider combining top responses if they provide different aspects
+                if (['responsibilities', 'painPoints', 'currentTools'].includes(field) && scoredResponses.length > 1) {
+                  // If top responses have similar high scores but different content, combine them
+                  if (scoredResponses[0].score - scoredResponses[1].score < 5 && 
+                      !scoredResponses[0].text.includes(scoredResponses[1].text)) {
+                    insights[field] = `${scoredResponses[0].text} ${scoredResponses[1].text}`;
+                  } else {
+                    insights[field] = scoredResponses[0].text;
+                  }
+                } else {
+                  insights[field] = scoredResponses[0].text;
+                }
               }
             }
             

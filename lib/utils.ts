@@ -46,24 +46,57 @@ export const getRandomInterviewCover = () => {
   return `/covers${interviewCovers[randomIndex]}`;
 };
 
-// Format interview data for LLM training
+// Enhanced training data formatter with conversational context
 export function formatInterviewForTraining(interview: any): { prompt: string; response: string }[] {
   const lines: { prompt: string; response: string }[] = [];
-
   const messages = interview.messages || [];
-
+  
+  // Create a system message with interview context
+  const systemContext = `You are Leila, Principal AI Strategy Consultant at SingularShift, conducting an AI readiness interview with a ${interview.role} in the ${interview.department} department. 
+Your goal is to understand their workflows, tools, challenges, and opportunities for AI implementation.
+Respond in a warm, professional tone with short, focused questions. Use British English.`;
+  
+  // Track conversation history for context window
+  const conversationHistory: {role: string, content: string}[] = [];
+  const maxHistoryItems = 4; // Keep last 2 turns (4 messages) for context
+  
+  // Process messages with conversational context
   for (let i = 0; i < messages.length - 1; i++) {
     const current = messages[i];
     const next = messages[i + 1];
-
+    
     if (current.role === "user" && next.role === "assistant") {
+      // Build contextual prompt with system message and conversation history
+      let contextualPrompt = systemContext;
+      
+      // Add conversation history
+      if (conversationHistory.length > 0) {
+        contextualPrompt += "\n\nConversation history:\n";
+        conversationHistory.forEach(msg => {
+          contextualPrompt += `${msg.role === "user" ? "User" : "You"}: ${msg.content.trim()}\n`;
+        });
+      }
+      
+      // Add current user message
+      contextualPrompt += `\nUser: ${current.content.trim()}\n\nYou: `;
+      
+      // Add to training data
       lines.push({
-        prompt: current.content.trim(),
+        prompt: contextualPrompt.trim(),
         response: next.content.trim()
       });
+      
+      // Update conversation history
+      conversationHistory.push(current);
+      conversationHistory.push(next);
+      
+      // Keep history within max size
+      while (conversationHistory.length > maxHistoryItems) {
+        conversationHistory.shift();
+      }
     }
   }
-
+  
   return lines;
 }
 
