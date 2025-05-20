@@ -55,11 +55,21 @@ const Agent = ({
 
   /* ---------- Vapi event binding ---------- */
   useEffect(() => {
-    const onCallStart = () => setCallStatus(CallStatus.ACTIVE);
-    const onCallEnd   = () => {
-      setCallStatus(CallStatus.FINISHED);
-      // Don't redirect here - we'll handle it after processing
+    const onCallStart = () => {
+      setCallStatus(CallStatus.ACTIVE);
+      console.log("Call started successfully");
+    };
+
+    const onCallEnd = () => {
       console.log("Call ended. Message count:", messages.length);
+      // Only set to FINISHED if we have enough messages
+      if (messages.length >= 10) {
+        setCallStatus(CallStatus.FINISHED);
+      } else {
+        console.log("Call ended prematurely, not enough messages to process");
+        toast.error("Interview ended unexpectedly. Please try again.");
+        setCallStatus(CallStatus.INACTIVE);
+      }
     };
 
     const onMessage = (m: Message) => {
@@ -69,19 +79,27 @@ const Agent = ({
       }
     };
 
+    const onError = (error: any) => {
+      console.error("Vapi error:", error);
+      toast.error("There was an error with the interview. Please try again.");
+      setCallStatus(CallStatus.INACTIVE);
+      vapi.stop();
+    };
+
     vapi.on("call-start", onCallStart);
     vapi.on("call-end", onCallEnd);
     vapi.on("message", onMessage);
     vapi.on("speech-start", () => setIsSpeaking(true));
-    vapi.on("speech-end",   () => setIsSpeaking(false));
-    vapi.on("error", e => console.error("Vapi error:", e));
+    vapi.on("speech-end", () => setIsSpeaking(false));
+    vapi.on("error", onError);
 
     return () => {
       vapi.off("call-start", onCallStart);
       vapi.off("call-end", onCallEnd);
       vapi.off("message", onMessage);
       vapi.off("speech-start", () => setIsSpeaking(true));
-      vapi.off("speech-end",   () => setIsSpeaking(false));
+      vapi.off("speech-end", () => setIsSpeaking(false));
+      vapi.off("error", onError);
     };
   }, [messages.length]);
 
@@ -92,8 +110,14 @@ const Agent = ({
     }
     
     const processInterview = async () => {
+      // Only process if we have enough messages (at least 10 exchanges)
+      if (messages.length < 10) {
+        console.log("Not enough messages to process interview:", messages.length);
+        return;
+      }
+
       // Check if we're already processing or if conditions aren't met
-      if (callStatus !== CallStatus.FINISHED || messages.length === 0 || processingRef.current) {
+      if (callStatus !== CallStatus.FINISHED || processingRef.current) {
         return;
       }
       
