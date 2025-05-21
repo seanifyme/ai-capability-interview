@@ -395,6 +395,7 @@ const Agent = ({
           user_seniority: seniority,
           user_location: location,
         },
+        maxDurationSeconds: 1800, // Override default 10-minute limit with 30-minute limit
       });
     } catch (e) {
       console.error(e);
