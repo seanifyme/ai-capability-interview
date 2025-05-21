@@ -19,13 +19,23 @@ export async function getFeedbackByInterviewId(
 
   if (!data) return null;
 
+  // Ensure we map all fields correctly, with fallbacks to empty values if missing
   return {
     interviewId,
     userId: data.userId,
-    totalScore: data.readinessScore,
-    benchmark: data.benchmarkSummary,
-    recommendations: data.recommendations,
+    totalScore: data.readinessScore || 0,
+    benchmark: data.benchmarkSummary || "AI readiness assessment completed.",
+    recommendations: Array.isArray(data.recommendations) 
+      ? data.recommendations 
+      : ["Consider exploring AI solutions for your workflow."],
     createdAt: data.createdAt,
+    strengths: Array.isArray(data.strengths) 
+      ? data.strengths 
+      : ["Existing knowledge of business processes."],
+    weaknesses: Array.isArray(data.weaknesses)
+      ? data.weaknesses
+      : ["Limited AI exposure."],
+    roleCategory: data.roleCategory || "General"
   };
 }
 

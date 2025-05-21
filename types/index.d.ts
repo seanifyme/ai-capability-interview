@@ -41,6 +41,8 @@ interface Feedback {
   }>;
   strengths?: string[];
   areasForImprovement?: string[];
+  weaknesses?: string[];
+  roleCategory?: string;
   finalAssessment?: string;
   createdAt: string;
 }

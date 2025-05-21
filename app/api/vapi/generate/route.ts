@@ -119,6 +119,20 @@ Return the category only.
             .sort((a, b) => b.length - a.length)
             .slice(0, 10);
 
+        // Include structured data analytics if available
+        const structuredDataSection = body.structuredData ? `
+STRUCTURED ANALYTICS:
+• Automation Level: ${body.structuredData.automationLevel || "Not detected"}%
+• AI Exposure Level: ${body.structuredData.aiExposureLevel || 0}/5
+• Change Readiness: ${body.structuredData.changeReadiness || 0}/5
+• Team Size: ${body.structuredData.teamSize || "Not specified"}
+• Time Spent on Repetitive Tasks: ${body.structuredData.timeSpentOnRepetitiveTasks || "Not specified"} hours/week
+• Tools Used: ${body.structuredData.toolsUsed?.join(', ') || "None detected"}
+• AI Tools Used: ${body.structuredData.aiToolsUsed?.join(', ') || "None detected"}
+• Metrics Used: ${body.structuredData.metricsUsed?.join(', ') || "None specified"}
+• Data Extraction Confidence: ${Math.round((body.structuredData.extractionConfidence || 0) * 100)}%
+` : '';
+
         const prompt = `
 You are a senior AI-strategy consultant analyzing an interview transcript to produce a comprehensive AI-Readiness Audit. Your assessment will help organizations understand their AI maturity and implementation readiness.
 
@@ -140,6 +154,7 @@ PRE-EXTRACTED INTERVIEW INSIGHTS:
 • High-Impact AI Opportunities: ${aiOpportunities || "To be determined"}
 • Appetite for Change: ${changeAppetite}
 • Blockers: ${blockers || "Not specified"}
+${structuredDataSection}
 
 KEY USER RESPONSES FROM INTERVIEW:
 ${substantiveResponses.map((response, i) => `[${i+1}] ${response}`).join('\n\n')}

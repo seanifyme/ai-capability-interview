@@ -10,40 +10,26 @@ import {
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/actions/auth.action";
 
-// 👇 Typed separately now
-type FeedbackWithExtras = {
-    totalScore?: number;
-    createdAt?: string;
-    benchmark?: string;
-    recommendations?: string[];
-};
-
-type InterviewWithExtras = {
-    strengths?: string[];
-    weaknesses?: string[];
-    roleCategory?: string;
-};
-
+// No need for custom types, using global types from index.d.ts
 
 const Feedback = async ({ params }: RouteParams) => {
     const { id } = await params;
     const user = await getCurrentUser();
 
-    const interviewRaw = await getInterviewById(id);
-    if (!interviewRaw) redirect("/");
+    const interview = await getInterviewById(id);
+    if (!interview) redirect("/");
     
     // Prevent access to unfinished interview feedback
-    if (!interviewRaw.finalized) {
+    if (!interview.finalized) {
         redirect("/");
     }
 
-    const feedbackRaw = await getFeedbackByInterviewId({
+    const feedback = await getFeedbackByInterviewId({
         interviewId: id,
         userId: user?.id || "",
     });
 
-    const feedback = feedbackRaw as FeedbackWithExtras;
-    const interview = interviewRaw as InterviewWithExtras;
+    if (!feedback) redirect("/");
 
     return (
         <section className="section-feedback">
@@ -70,8 +56,8 @@ const Feedback = async ({ params }: RouteParams) => {
                         <p>
                             AI Readiness Score:{" "}
                             <span className="text-primary-200 font-bold">
-          {feedback?.totalScore ?? "---"}
-        </span>
+                                {feedback.totalScore ?? "---"}
+                            </span>
                             /100
                         </p>
                     </div>
@@ -80,21 +66,21 @@ const Feedback = async ({ params }: RouteParams) => {
                     <div className="flex flex-row gap-2 items-center">
                         <Image src="/calendar.svg" width={22} height={22} alt="calendar" />
                         <p>
-                            {feedback?.createdAt
+                            {feedback.createdAt
                                 ? dayjs(feedback.createdAt).format("MMM D, YYYY h:mm A")
                                 : "N/A"}
                         </p>
                     </div>
 
                     {/* Role Category */}
-                    {interview?.roleCategory && (
+                    {feedback.roleCategory && (
                         <div className="flex flex-row gap-2 items-center">
                             <Image src="/user.svg" width={22} height={22} alt="role" />
                             <p>
                                 Role Category:{" "}
                                 <span className="text-primary-200 font-bold">
-            {interview.roleCategory}
-          </span>
+                                    {feedback.roleCategory}
+                                </span>
                             </p>
                         </div>
                     )}
@@ -107,16 +93,16 @@ const Feedback = async ({ params }: RouteParams) => {
             <div className="mb-6">
                 <h2 className="text-xl font-semibold">Benchmark Summary</h2>
                 <p className="mt-2 text-dark200_light800">
-                    {feedback?.benchmark || "Benchmark insights not available."}
+                    {feedback.benchmark || "Benchmark insights not available."}
                 </p>
             </div>
 
             {/* Strengths */}
-            {Array.isArray(interview?.strengths) && interview.strengths.length > 0 && (
+            {Array.isArray(feedback.strengths) && feedback.strengths.length > 0 && (
                 <div className="mb-6">
                     <h2 className="text-xl font-semibold">Your Strengths</h2>
                     <ul className="list-disc ml-5 mt-3 space-y-2 text-green-700 dark:text-green-400">
-                        {interview.strengths.map((item: string, idx: number) => (
+                        {feedback.strengths.map((item: string, idx: number) => (
                             <li key={idx}>{item}</li>
                         ))}
                     </ul>
@@ -124,11 +110,11 @@ const Feedback = async ({ params }: RouteParams) => {
             )}
 
             {/* Weaknesses */}
-            {Array.isArray(interview?.weaknesses) && interview.weaknesses.length > 0 && (
+            {Array.isArray(feedback.weaknesses) && feedback.weaknesses.length > 0 && (
                 <div className="mb-6">
                     <h2 className="text-xl font-semibold">Your Weaknesses</h2>
                     <ul className="list-disc ml-5 mt-3 space-y-2 text-red-700 dark:text-red-400">
-                        {interview.weaknesses.map((item: string, idx: number) => (
+                        {feedback.weaknesses.map((item: string, idx: number) => (
                             <li key={idx}>{item}</li>
                         ))}
                     </ul>
@@ -139,7 +125,7 @@ const Feedback = async ({ params }: RouteParams) => {
             <div>
                 <h2 className="text-xl font-semibold">Recommended AI Use Cases</h2>
                 <ul className="list-disc ml-5 mt-3 space-y-2 text-dark200_light800">
-                    {feedback?.recommendations?.length ? (
+                    {feedback.recommendations?.length ? (
                         feedback.recommendations.map((rec: string, index: number) => (
                             <li key={index}>{rec.replace(/\*\*/g, "")}</li>
                         ))
