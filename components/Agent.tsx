@@ -187,20 +187,38 @@ const Agent = ({
             groupedByUserTurns.push(currentTurn);
           }
           
-          // Create a conversation summary by topic
-          const insights: Record<string, string> = {
-            responsibilities: '',
-            painPoints: '',
-            currentTools: '',
-            aiExposure: '',
-            changeAppetite: '',
-            teamSize: '',
-            processMap: '',
-            metricsUsed: '',
-            rootCauses: '',
-            dataFlows: '',
-            aiOpportunities: '',
-            blockers: ''
+          // Create a structured insights object with typed data instead of just strings
+          const insights: Record<string, any> = {
+            responsibilities: { text: '', source: 'extraction', confidence: 0 },
+            painPoints: { text: '', source: 'extraction', confidence: 0 },
+            currentTools: { 
+              text: '', 
+              toolsList: [] as string[],
+              automationLevel: null as number | null,
+              source: 'extraction', 
+              confidence: 0 
+            },
+            aiExposure: { 
+              text: '', 
+              level: 0, 
+              toolsUsed: [] as string[],
+              source: 'extraction', 
+              confidence: 0 
+            },
+            changeAppetite: { text: '', level: 0, source: 'extraction', confidence: 0 },
+            teamSize: { text: '', count: null as number | null, source: 'extraction', confidence: 0 },
+            processMap: { text: '', source: 'extraction', confidence: 0 },
+            metricsUsed: { text: '', metricsList: [] as string[], source: 'extraction', confidence: 0 },
+            rootCauses: { text: '', source: 'extraction', confidence: 0 },
+            dataFlows: { text: '', source: 'extraction', confidence: 0 },
+            aiOpportunities: { text: '', source: 'extraction', confidence: 0 },
+            blockers: { text: '', source: 'extraction', confidence: 0 },
+            timeSpentOnRepetitiveTasks: { 
+              text: '', 
+              hoursPerWeek: null as number | null, 
+              source: 'extraction', 
+              confidence: 0 
+            }
           };
           
           // Keywords and phrases related to each field
@@ -216,7 +234,8 @@ const Agent = ({
             rootCauses: ['root cause', 'reason', 'why', 'underlying', 'source', 'origin', 'fundamental', 'driver', 'core issue', 'heart of the problem', 'stems from', 'basis', 'foundational problem'],
             dataFlows: ['data', 'information', 'flows', 'privacy', 'security', 'sensitive', 'sharing', 'access', 'transfer', 'input', 'output', 'storage', 'database', 'repository', 'pipeline', 'integration'],
             aiOpportunities: ['opportunity', 'potential', 'could be', 'automate', 'improve with', 'benefit from', 'streamline', 'enhance', 'optimize', 'efficiency gain', 'time-saving', 'reduce manual', 'accelerate'],
-            blockers: ['blocker', 'obstacle', 'barrier', 'preventing', 'stopping', 'challenge', 'issue', 'limitation', 'constraint', 'roadblock', 'impediment', 'showstopper', 'bottleneck', 'dependency']
+            blockers: ['blocker', 'obstacle', 'barrier', 'preventing', 'stopping', 'challenge', 'issue', 'limitation', 'constraint', 'roadblock', 'impediment', 'showstopper', 'bottleneck', 'dependency'],
+            timeSpentOnRepetitiveTasks: ['repetitive', 'manual', 'time spent', 'wasted time', 'low value', 'hours', 'minutes', 'waste', 'inefficient', 'tedious', 'mundane']
           };
           
           // Add a weight-based scoring function to improve quality of extraction
@@ -238,8 +257,54 @@ const Agent = ({
             
             return score;
           };
+
+          // Function to extract numeric values from text
+          const extractNumber = (text: string): number | null => {
+            const matches = text.match(/\b(\d+)\b/);
+            if (matches && matches[1]) {
+              return parseInt(matches[1], 10);
+            }
+            return null;
+          };
+
+          // Function to extract enumerated level (0-5) based on keywords
+          const extractLevel = (text: string, positive: string[], negative: string[]): number => {
+            const lowerText = text.toLowerCase();
+            
+            // Count positive and negative sentiment indicators
+            const positiveCount = positive.filter(word => lowerText.includes(word)).length;
+            const negativeCount = negative.filter(word => lowerText.includes(word)).length;
+            
+            if (positiveCount > negativeCount * 2) return 5; // Very positive
+            if (positiveCount > negativeCount) return 4; // Positive
+            if (positiveCount === negativeCount) return 3; // Neutral
+            if (negativeCount > positiveCount) return 2; // Negative
+            if (negativeCount > positiveCount * 2) return 1; // Very negative
+            return 0; // Could not determine
+          };
+
+          // Function to extract tool names from text
+          const extractTools = (text: string): string[] => {
+            const toolPatterns = [
+              /\b(jenkins|jira|confluence|slack|teams|excel|word|powerpoint|outlook|git|github|gitlab|azure|aws|gcp|selenium|cypress|cucumber|postman|swagger|notion|trello|asana|monday|clickup|figma|adobe|sketch|invision|zapier|salesforce|hubspot|zendesk|servicenow|sql|python|javascript|typescript|java|c\#|react|angular|vue)\b/gi,
+            ];
+            
+            const tools: string[] = [];
+            for (const pattern of toolPatterns) {
+              const matches = text.match(pattern);
+              if (matches) {
+                matches.forEach(match => {
+                  const tool = match.trim().toLowerCase();
+                  if (!tools.includes(tool)) {
+                    tools.push(tool);
+                  }
+                });
+              }
+            }
+            return tools;
+          };
           
-          // Extract insights for each field by looking at conversation context
+          // Process each field with enhanced extraction
           Object.keys(insights).forEach(field => {
             const keywords = fieldKeywords[field];
             
@@ -263,18 +328,6 @@ const Agent = ({
               const userResponses = relevantTurns.flatMap(turn => turn.user).filter(Boolean);
               
               if (userResponses.length > 0) {
-                // Use the most detailed response (typically the longest one)
-                const bestResponse = userResponses.sort((a, b) => b.length - a.length)[0];
-                insights[field] = bestResponse;
-              }
-            }
-            
-            // Replace with improved version that uses scoring
-            if (relevantTurns.length > 0) {
-              // Combine all user responses from relevant turns
-              const userResponses = relevantTurns.flatMap(turn => turn.user).filter(Boolean);
-              
-              if (userResponses.length > 0) {
                 // Score responses based on relevance and detail
                 const scoredResponses = userResponses.map(response => ({
                   text: response,
@@ -284,24 +337,97 @@ const Agent = ({
                 // Sort by score (higher is better)
                 scoredResponses.sort((a, b) => b.score - a.score);
                 
+                // Set confidence based on highest score
+                insights[field].confidence = Math.min(scoredResponses[0].score / 20, 1); // 0-1 confidence score
+                
                 // For very important fields, consider combining top responses if they provide different aspects
                 if (['responsibilities', 'painPoints', 'currentTools'].includes(field) && scoredResponses.length > 1) {
                   // If top responses have similar high scores but different content, combine them
                   if (scoredResponses[0].score - scoredResponses[1].score < 5 && 
                       !scoredResponses[0].text.includes(scoredResponses[1].text)) {
-                    insights[field] = `${scoredResponses[0].text} ${scoredResponses[1].text}`;
+                    insights[field].text = `${scoredResponses[0].text} ${scoredResponses[1].text}`;
                   } else {
-                    insights[field] = scoredResponses[0].text;
+                    insights[field].text = scoredResponses[0].text;
                   }
                 } else {
-                  insights[field] = scoredResponses[0].text;
+                  insights[field].text = scoredResponses[0].text;
+                }
+                
+                // Additional field-specific processing
+                if (field === 'currentTools') {
+                  insights[field].toolsList = extractTools(insights[field].text);
+                  
+                  // Try to extract automation level
+                  const automationMatch = insights[field].text.match(/(\d+)\s*%\s*automated/i) || 
+                                         insights[field].text.match(/(\d+)\s*percent\s*automated/i);
+                  if (automationMatch && automationMatch[1]) {
+                    insights[field].automationLevel = parseInt(automationMatch[1], 10);
+                  }
+                } else if (field === 'aiExposure') {
+                  // Extract AI tools used
+                  insights[field].toolsUsed = [];
+                  const aiToolPatterns = [
+                    /\b(chatgpt|gpt-4|gpt-3|claude|gemini|bard|copilot|dalle|midjourney|stable diffusion|whisper|anthropic)\b/gi
+                  ];
+                  
+                  for (const pattern of aiToolPatterns) {
+                    const matches = insights[field].text.match(pattern);
+                    if (matches) {
+                      matches.forEach((match: string) => {
+                        if (!insights[field].toolsUsed.includes(match.toLowerCase())) {
+                          insights[field].toolsUsed.push(match.toLowerCase());
+                        }
+                      });
+                    }
+                  }
+                  
+                  // Try to determine AI exposure level (1-5)
+                  insights[field].level = extractLevel(
+                    insights[field].text, 
+                    ['familiar', 'use', 'using', 'used', 'regularly', 'daily', 'often', 'expert', 'proficient', 'advanced'],
+                    ['unfamiliar', 'never', 'rarely', 'limited', 'beginner', 'basic', 'little', 'not used']
+                  );
+                } else if (field === 'changeAppetite') {
+                  // Determine change appetite level (1-5)
+                  insights[field].level = extractLevel(
+                    insights[field].text,
+                    ['open', 'willing', 'excited', 'eager', 'ready', 'welcome', 'embrace', 'positive', 'interested'],
+                    ['resistant', 'reluctant', 'hesitant', 'cautious', 'concerned', 'worried', 'skeptical', 'negative']
+                  );
+                } else if (field === 'teamSize') {
+                  // Try to extract the team size number
+                  insights[field].count = extractNumber(insights[field].text);
+                } else if (field === 'timeSpentOnRepetitiveTasks') {
+                  // Try to extract hours per week
+                  const hoursMatch = insights[field].text.match(/(\d+)\s*(hours|hrs)/i);
+                  if (hoursMatch && hoursMatch[1]) {
+                    insights[field].hoursPerWeek = parseInt(hoursMatch[1], 10);
+                  }
+                } else if (field === 'metricsUsed') {
+                  // Try to extract specific metrics mentioned
+                  const metricPatterns = [
+                    /\b(kpi|roi|revenue|conversion|retention|churn|csat|nps|efficiency|productivity|performance|quality|speed|accuracy|defects|bugs|errors|uptime|downtime|latency|throughput|cost|savings|growth)\b/gi
+                  ];
+                  
+                  for (const pattern of metricPatterns) {
+                    const matches = insights[field].text.match(pattern);
+                    if (matches) {
+                      matches.forEach((match: string) => {
+                        if (!insights[field].metricsList.includes(match.toLowerCase())) {
+                          insights[field].metricsList.push(match.toLowerCase());
+                        }
+                      });
+                    }
+                  }
                 }
               }
             }
             
             // If no good answer was found, use a default
-            if (!insights[field]) {
-              insights[field] = `Not explicitly discussed during interview`;
+            if (!insights[field].text) {
+              insights[field].text = `Not explicitly discussed during interview`;
+              insights[field].source = 'default';
+              insights[field].confidence = 0;
             }
           });
           
@@ -310,6 +436,25 @@ const Agent = ({
         
         // Get actual conversation insights
         const insights = extractConversationInsights();
+        
+        // Create a simpler representation for API payload - extracting just the text from structured insights
+        const insightsForPayload = Object.keys(insights).reduce((acc, key) => {
+          acc[key] = insights[key].text;
+          return acc;
+        }, {} as Record<string, string>);
+        
+        // Additional structured data for analytics 
+        const structuredData = {
+          automationLevel: insights.currentTools.automationLevel,
+          aiExposureLevel: insights.aiExposure.level,
+          changeReadiness: insights.changeAppetite.level,
+          teamSize: insights.teamSize.count,
+          timeSpentOnRepetitiveTasks: insights.timeSpentOnRepetitiveTasks.hoursPerWeek,
+          toolsUsed: insights.currentTools.toolsList,
+          aiToolsUsed: insights.aiExposure.toolsUsed,
+          metricsUsed: insights.metricsUsed.metricsList,
+          extractionConfidence: Object.keys(insights).reduce((sum, key) => sum + insights[key].confidence, 0) / Object.keys(insights).length
+        };
         
         // Prepare a more comprehensive payload
         const payload = {
@@ -322,18 +467,10 @@ const Agent = ({
           // Mark if the interview was properly completed
           finalized: interviewCompleted, 
           // Use extracted insights for all fields
-          responsibilities: insights.responsibilities,
-          painPoints: insights.painPoints,
-          currentTools: insights.currentTools,
-          aiExposure: insights.aiExposure, 
-          changeAppetite: insights.changeAppetite,
-          teamSize: insights.teamSize,
-          processMap: insights.processMap,
-          metricsUsed: insights.metricsUsed,
-          rootCauses: insights.rootCauses,
-          dataFlows: insights.dataFlows,
-          aiOpportunities: insights.aiOpportunities,
-          blockers: insights.blockers
+          ...insightsForPayload,
+          // Add structured data metrics
+          structuredData,
+          extractionMethod: "enhanced-keyword-matching"
         };
         
         console.log("Sending payload to API with extracted fields:", Object.keys(payload).join(", "));
@@ -395,11 +532,7 @@ const Agent = ({
           user_seniority: seniority,
           user_location: location,
         },
-        maxDurationSeconds: 1800, // Override default 10-minute limit with 30-minute limit
-        startSpeakingPlan: {
-          waitSeconds: 1.5, // Longer pause before speaking (default is usually 0.4)
-          smartEndpointingEnabled: "true"
-        }
+        maxDurationSeconds: 1800 // Override default 10-minute limit with 30-minute limit
       });
     } catch (e) {
       console.error(e);

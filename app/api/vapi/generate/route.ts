@@ -243,27 +243,52 @@ Return **only** JSON of the form:
             roleCategory,
             department,
             teamSize: teamSize || "Not specified",
-            responsibilities,
-            processMap: processMap || "Not specified",
-            metricsUsed: metricsUsed || "Not specified",
-            painPoints,
-            rootCauses: rootCauses || "Not specified",
-            currentTools,
-            dataFlows: dataFlows || "Not specified",
-            aiExposure,
-            aiOpportunities: aiOpportunities || "Not specified",
-            changeAppetite,
-            blockers: blockers || "Not specified",
+            // Store the raw extracted texts
+            responsibilities: body.responsibilities || "",
+            processMap: body.processMap || "Not specified",
+            metricsUsed: body.metricsUsed || "Not specified",
+            painPoints: body.painPoints || "",
+            rootCauses: body.rootCauses || "Not specified",
+            currentTools: body.currentTools || "",
+            dataFlows: body.dataFlows || "Not specified",
+            aiExposure: body.aiExposure || "",
+            aiOpportunities: body.aiOpportunities || "Not specified",
+            changeAppetite: body.changeAppetite || "",
+            blockers: body.blockers || "Not specified",
+            
+            // Store the structured analytics data if available
+            structuredData: body.structuredData || {
+                automationLevel: null,
+                aiExposureLevel: 0,
+                changeReadiness: 0,
+                teamSize: null,
+                timeSpentOnRepetitiveTasks: null,
+                toolsUsed: [],
+                aiToolsUsed: [],
+                metricsUsed: [],
+                extractionConfidence: 0
+            },
+            
+            // Store metadata about the extraction process
+            extractionMethod: body.extractionMethod || "keyword-matching",
+            
+            // Generated report data
             readinessScore,
             benchmarkSummary,
             recommendations,
             strengths,
             weaknesses,
+            
+            // Metadata
             finalized: body.finalized !== undefined ? body.finalized : true,
             coverImage: getRandomInterviewCover(),
             createdAt: new Date().toISOString(),
             type: "AI Readiness",
+            
+            // Store raw messages for training
             messages,
+            
+            // Format messages for LLM training
             trainingData: formatInterviewForTraining({
                 role,
                 type: "AI Readiness",
@@ -271,6 +296,7 @@ Return **only** JSON of the form:
                 readinessScore,
                 benchmarkSummary,
                 recommendations,
+                structuredData: body.structuredData, // Pass structured data to training format
                 strengths,
                 weaknesses,
                 department,

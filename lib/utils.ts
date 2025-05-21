@@ -97,6 +97,88 @@ Respond in a warm, professional tone with short, focused questions. Use British 
     }
   }
   
+  // Add report generation samples for fine-tuning if we have structured data and readiness score
+  if (interview.structuredData && interview.readinessScore) {
+    // Create examples for different report generation tasks
+    
+    // Example 1: Generate readiness score based on structured data
+    const scorePrompt = `You are an AI readiness consultant analyzing interview data to produce a readiness score.
+
+INTERVIEW CONTEXT:
+• Role: ${interview.role}
+• Department: ${interview.department}
+• Team Size: ${interview.structuredData.teamSize || "Not specified"}
+
+STRUCTURED DATA:
+• Automation Level: ${interview.structuredData.automationLevel || "Not detected"}%
+• AI Exposure Level: ${interview.structuredData.aiExposureLevel || 0}/5
+• Change Readiness: ${interview.structuredData.changeReadiness || 0}/5
+• Tools Used: ${interview.structuredData.toolsUsed?.join(', ') || "None detected"}
+• AI Tools Used: ${interview.structuredData.aiToolsUsed?.join(', ') || "None detected"}
+• Time Spent on Repetitive Tasks: ${interview.structuredData.timeSpentOnRepetitiveTasks || "Not specified"} hours/week
+
+Provide an AI readiness score from 0-100 based on this data. Return only the score as a number.`;
+
+    lines.push({
+      prompt: scorePrompt,
+      response: interview.readinessScore.toString()
+    });
+    
+    // Example 2: Generate recommendations based on structured data
+    if (interview.recommendations && interview.recommendations.length > 0) {
+      const recPrompt = `You are an AI readiness consultant analyzing interview data to produce recommendations.
+
+INTERVIEW CONTEXT:
+• Role: ${interview.role}
+• Department: ${interview.department}
+• Team Size: ${interview.structuredData.teamSize || "Not specified"}
+
+STRUCTURED DATA:
+• Automation Level: ${interview.structuredData.automationLevel || "Not detected"}%
+• AI Exposure Level: ${interview.structuredData.aiExposureLevel || 0}/5
+• Change Readiness: ${interview.structuredData.changeReadiness || 0}/5
+• Tools Used: ${interview.structuredData.toolsUsed?.join(', ') || "None detected"}
+• AI Tools Used: ${interview.structuredData.aiToolsUsed?.join(', ') || "None detected"}
+• Time Spent on Repetitive Tasks: ${interview.structuredData.timeSpentOnRepetitiveTasks || "Not specified"} hours/week
+
+Based on this data, provide 3 specific, practical recommendations for improving AI readiness. Each recommendation should follow the format: "Implement [specific solution] for [specific process] to address [specific pain point]." Return only the recommendations.`;
+
+      // Construct combined response with all recommendations
+      const recResponse = interview.recommendations.join('\n\n');
+      
+      lines.push({
+        prompt: recPrompt,
+        response: recResponse
+      });
+    }
+    
+    // Example 3: Generate benchmark summary based on structured data
+    if (interview.benchmarkSummary) {
+      const summaryPrompt = `You are an AI readiness consultant analyzing interview data to produce a benchmark summary.
+
+INTERVIEW CONTEXT:
+• Role: ${interview.role}
+• Department: ${interview.department}
+• Team Size: ${interview.structuredData.teamSize || "Not specified"}
+• Readiness Score: ${interview.readinessScore}/100
+
+STRUCTURED DATA:
+• Automation Level: ${interview.structuredData.automationLevel || "Not detected"}%
+• AI Exposure Level: ${interview.structuredData.aiExposureLevel || 0}/5
+• Change Readiness: ${interview.structuredData.changeReadiness || 0}/5
+• Tools Used: ${interview.structuredData.toolsUsed?.join(', ') || "None detected"}
+• AI Tools Used: ${interview.structuredData.aiToolsUsed?.join(', ') || "None detected"}
+• Time Spent on Repetitive Tasks: ${interview.structuredData.timeSpentOnRepetitiveTasks || "Not specified"} hours/week
+
+Provide a concise, evidence-based benchmark summary (100-150 words) with role-specific context.`;
+
+      lines.push({
+        prompt: summaryPrompt,
+        response: interview.benchmarkSummary
+      });
+    }
+  }
+  
   return lines;
 }
 
