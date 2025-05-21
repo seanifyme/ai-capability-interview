@@ -396,6 +396,10 @@ const Agent = ({
           user_location: location,
         },
         maxDurationSeconds: 1800, // Override default 10-minute limit with 30-minute limit
+        startSpeakingPlan: {
+          waitSeconds: 1.5, // Longer pause before speaking (default is usually 0.4)
+          smartEndpointingEnabled: "true"
+        }
       });
     } catch (e) {
       console.error(e);
